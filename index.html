@@ -63,7 +63,6 @@
                 margin: 10% auto;
             }
         }
-        /* Style for the item pool when it's a grid */
         #items-pool.grid-view .item-card {
             flex-direction: row;
             justify-content: flex-start;
@@ -87,6 +86,12 @@
                 <div>
                     <label for="groupNameInput" class="block mb-2 text-sm font-medium text-slate-300">모둠명을 입력하세요</label>
                     <input type="text" id="groupNameInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" placeholder="예) 1모둠" required>
+                </div>
+                <div>
+                    <label for="studentNumberInput" class="block mb-2 text-sm font-medium text-slate-300">번호를 선택하세요</label>
+                    <select id="studentNumberInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" required>
+                        <!-- Options will be populated by JS -->
+                    </select>
                 </div>
                 <div>
                     <label for="studentNameInput" class="block mb-2 text-sm font-medium text-slate-300">이름을 입력하세요</label>
@@ -149,18 +154,18 @@
                     내 전문지식 보기 🧠
                 </button>
             </div>
-            <div class="flex flex-col lg:flex-row gap-6">
+            <div class="flex flex-col md:flex-row gap-6">
                 <!-- Left: Item Pool -->
-                <div class="w-full lg:w-1/3">
+                <div class="w-full md:w-1/3">
                     <h3 class="font-bold text-xl mb-4 text-center">사용 가능한 물품</h3>
-                    <div id="items-pool" class="bg-slate-800 p-4 rounded-lg min-h-[300px] lg:min-h-[60vh] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
+                    <div id="items-pool" class="bg-slate-800 p-4 rounded-lg min-h-[300px] md:min-h-[60vh] grid grid-cols-1 lg:grid-cols-2 gap-3">
                         <!-- Item cards will be injected here by JS -->
                     </div>
                 </div>
                 <!-- Right: Ranking List -->
-                <div class="w-full lg:w-2/3">
+                <div class="w-full md:w-2/3">
                     <h3 class="font-bold text-xl mb-4 text-center">나의 생존 키트 순위</h3>
-                    <div id="rank-list" class="bg-slate-800 p-4 rounded-lg min-h-[300px] lg:min-h-[60vh] space-y-3 overflow-y-auto">
+                    <div id="rank-list" class="bg-slate-800 p-4 rounded-lg min-h-[300px] md:min-h-[60vh] space-y-3 overflow-y-auto">
                        <!-- Ranked items will be dropped here -->
                     </div>
                 </div>
@@ -178,7 +183,8 @@
                 <h2 class="text-2xl sm:text-3xl font-bold text-center mb-4">나의 최종 생존 전략</h2>
                 <p class="text-center text-slate-300 mb-8">
                     모둠: <span id="final-group-name" class="font-bold text-cyan-400"></span> / 
-                    이름: <span id="final-student-name" class="font-bold text-cyan-400"></span> / 
+                    <span id="final-student-number" class="font-bold text-cyan-400"></span>번 
+                    <span id="final-student-name" class="font-bold text-cyan-400"></span> / 
                     전문 분야: <span id="final-role" class="font-bold text-orange-400"></span>
                 </p>
                 <div id="final-list" class="space-y-3 bg-slate-800 p-4 sm:p-6 rounded-lg">
@@ -223,89 +229,25 @@
                 scientist: {
                     name: '우주과학자',
                     knowledge: [
-                        "달에는 공기(산소)가 전혀 없어요",
-                        "달에서 불은 탈 수 없어요 (산소가 없으니까)",
-                        "낮에는 120도, 밤에는 -170도예요",
-                        "달에는 자기장이 없어서 방사선이 많이 들어와요",
-                        "달에서는 중력이 약해서 높이 뛸 수 있어요",
-                        "물은 진공 상태에서 끓어요",
-                        "우주복에는 이미 온도 조절 기능이 있어요",
-                        "우주복 안의 산소는 보통 6-8시간 정도 쓸 수 있어요",
-                        "우주인들은 보통 기저귀를 입고 우주복을 입어요",
-                        "달의 지름은 3,474km예요",
-                        "달은 지구에서 38만km 떨어져 있어요",
-                        "달은 약 45억년 전에 만들어졌어요",
-                        "달에는 토끼가 살고 있다는 전설이 있어요",
-                        "달의 바다는 실제로는 물이 없는 평원이에요",
-                        "달에는 산소가 없다는 사실이 어떤 물품에 영향을 줄까요?",
-                        "극한의 온도 환경에서 필요한 것은 무엇일까요?",
-                        "우주복의 기능을 생각하면 어떤 물품이 중복될까요?"
+                        "달에는 공기(산소)가 전혀 없어요", "달에서 불은 탈 수 없어요 (산소가 없으니까)", "낮에는 120도, 밤에는 -170도예요", "달에는 자기장이 없어서 방사선이 많이 들어와요", "달에서는 중력이 약해서 높이 뛸 수 있어요", "물은 진공 상태에서 끓어요", "우주복에는 이미 온도 조절 기능이 있어요", "우주복 안의 산소는 보통 6-8시간 정도 쓸 수 있어요", "우주인들은 보통 기저귀를 입고 우주복을 입어요", "달의 지름은 3,474km예요", "달은 지구에서 38만km 떨어져 있어요", "달은 약 45억년 전에 만들어졌어요", "달에는 토끼가 살고 있다는 전설이 있어요", "달의 바다는 실제로는 물이 없는 평원이에요", "달에는 산소가 없다는 사실이 어떤 물품에 영향을 줄까요?", "극한의 온도 환경에서 필요한 것은 무엇일까요?", "우주복의 기능을 생각하면 어떤 물품이 중복될까요?"
                     ]
                 },
                 explorer: {
                     name: '탐험가',
                     knowledge: [
-                        "달에는 지구처럼 자기장이 없어서 나침반이 작동 안 해요",
-                        "밤하늘의 별을 보고 방향을 찾을 수 있어요",
-                        "달에서는 소리가 들리지 않아요 (공기가 없어서)",
-                        "200km는 아주 먼 거리예요 (서울에서 대전 정도)",
-                        "높은 곳에서 떨어져도 천천히 떨어져요",
-                        "끈이나 로프는 여러 용도로 쓸 수 있어요",
-                        "길을 잃었을 때는 한 곳에 머물러야 한다고 배웠어요",
-                        "응급상황에서는 밝은 색깔 옷이 좋아요",
-                        "야외에서는 호루라기로 도움을 요청해요",
-                        "산에서는 해가 지면 급격히 추워져요",
-                        "지구에서 산을 오를 때는 항상 물을 많이 가져가요",
-                        "등산할 때는 따뜻한 옷을 입어야 해요",
-                        "숲에서는 이끼가 있는 쪽이 북쪽이에요",
-                        "캠핑할 때는 텐트를 바람 반대쪽에 쳐야 해요",
-                        "달에서의 길찾기는 지구와 어떻게 다를까요?",
-                        "200km라는 긴 거리를 이동하려면 무엇이 필요할까요?",
-                        "지구에서의 탐험 상식이 달에서도 통할까요?"
+                        "달에는 지구처럼 자기장이 없어서 나침반이 작동 안 해요", "밤하늘의 별을 보고 방향을 찾을 수 있어요", "달에서는 소리가 들리지 않아요 (공기가 없어서)", "200km는 아주 먼 거리예요 (서울에서 대전 정도)", "높은 곳에서 떨어져도 천천히 떨어져요", "끈이나 로프는 여러 용도로 쓸 수 있어요", "길을 잃었을 때는 한 곳에 머물러야 한다고 배웠어요", "응급상황에서는 밝은 색깔 옷이 좋아요", "야외에서는 호루라기로 도움을 요청해요", "산에서는 해가 지면 급격히 추워져요", "지구에서 산을 오를 때는 항상 물을 많이 가져가요", "등산할 때는 따뜻한 옷을 입어야 해요", "숲에서는 이끼가 있는 쪽이 북쪽이에요", "캠핑할 때는 텐트를 바람 반대쪽에 쳐야 해요", "달에서의 길찾기는 지구와 어떻게 다를까요?", "200km라는 긴 거리를 이동하려면 무엇이 필요할까요?", "지구에서의 탐험 상식이 달에서도 통할까요?"
                     ]
                 },
                 communicator: {
                     name: '통신전문가',
                     knowledge: [
-                        "태양열로 충전되는 장비는 낮에만 충전돼요",
-                        "무전기는 배터리가 떨어지면 쓸 수 없어요",
-                        "달에서는 전파가 지구보다 잘 전달돼요 (방해물이 없어서)",
-                        "밝은 신호는 멀리서도 볼 수 있어요",
-                        "조명탄은 진공에서도 탈 수 있게 만들어졌어요",
-                        "응급신호는 3번씩 반복해야 해요",
-                        "구조대가 오고 있는지는 모르겠어요",
-                        "보트에는 풍선처럼 압축가스가 가득 들어 있어요",
-                        "금속은 전기를 잘 통해요",
-                        "휴대폰은 보통 하루 정도 배터리가 지속돼요",
-                        "WiFi는 벽을 통과하기 어려워요",
-                        "라디오는 AM과 FM 두 종류가 있어요",
-                        "비가 올 때는 전자기기를 조심해야 해요",
-                        "블루투스는 10m 정도까지 연결돼요",
-                        "달에서 구조받으려면 어떤 방법이 가장 좋을까요?",
-                        "배터리와 전력 공급은 어떻게 해결할까요?",
-                        "지구에서 쓰던 통신 방법이 달에서도 통할까요?"
+                        "태양열로 충전되는 장비는 낮에만 충전돼요", "무전기는 배터리가 떨어지면 쓸 수 없어요", "달에서는 전파가 지구보다 잘 전달돼요 (방해물이 없어서)", "밝은 신호는 멀리서도 볼 수 있어요", "조명탄은 진공에서도 탈 수 있게 만들어졌어요", "응급신호는 3번씩 반복해야 해요", "구조대가 오고 있는지는 모르겠어요", "보트에는 풍선처럼 압축가스가 가득 들어 있어요", "금속은 전기를 잘 통해요", "휴대폰은 보통 하루 정도 배터리가 지속돼요", "WiFi는 벽을 통과하기 어려워요", "라디오는 AM과 FM 두 종류가 있어요", "비가 올 때는 전자기기를 조심해야 해요", "블루투스는 10m 정도까지 연결돼요", "달에서 구조받으려면 어떤 방법이 가장 좋을까요?", "배터리와 전력 공급은 어떻게 해결할까요?", "지구에서 쓰던 통신 방법이 달에서도 통할까요?"
                     ]
                 },
                 medic: {
                     name: '의료진',
                     knowledge: [
-                        "우주복이 찢어지면 매우 위험해요",
-                        "작은 상처도 달에서는 감염될 수 있어요",
-                        "총이나 조명탄은 다칠 위험이 있어요",
-                        "응급처치할 때는 환자를 따뜻하게 해줘야 해요",
-                        "몸의 체온과 수분을 유지하는 것이 중요해요",
-                        "탈수되면 판단력이 떨어져요",
-                        "영양 상태가 나쁘면 체력이 떨어져요",
-                        "스트레스받으면 실수를 많이 해요",
-                        "분유는 영양가가 있지만 물에 타서 먹어야 해요",
-                        "하루에 물을 8잔 정도 마셔야 건강해요",
-                        "감기에 걸리면 따뜻하게 해야 해요",
-                        "운동 전에는 스트레칭을 해야 해요",
-                        "손을 자주 씻어야 세균을 막을 수 있어요",
-                        "비타민C는 감기 예방에 좋아요",
-                        "달에서 건강을 지키려면 무엇이 가장 중요할까요?",
-                        "응급상황이 생겼을 때 어떻게 대처해야 할까요?",
-                        "지구에서의 건강 상식이 달에서도 적용될까요?"
+                        "우주복이 찢어지면 매우 위험해요", "작은 상처도 달에서는 감염될 수 있어요", "총이나 조명탄은 다칠 위험이 있어요", "응급처치할 때는 환자를 따뜻하게 해줘야 해요", "몸의 체온과 수분을 유지하는 것이 중요해요", "탈수되면 판단력이 떨어져요", "영양 상태가 나쁘면 체력이 떨어져요", "스트레스받으면 실수를 많이 해요", "분유는 영양가가 있지만 물에 타서 먹어야 해요", "하루에 물을 8잔 정도 마셔야 건강해요", "감기에 걸리면 따뜻하게 해야 해요", "운동 전에는 스트레칭을 해야 해요", "손을 자주 씻어야 세균을 막을 수 있어요", "비타민C는 감기 예방에 좋아요", "달에서 건강을 지키려면 무엇이 가장 중요할까요?", "응급상황이 생겼을 때 어떻게 대처해야 할까요?", "지구에서의 건강 상식이 달에서도 적용될까요?"
                     ]
                 },
             },
@@ -330,6 +272,7 @@
                 currentScreen: 'intro-screen',
                 groupName: null,
                 studentName: null,
+                studentNumber: null,
                 selectedRole: null,
                 rankedItems: [],
             }
@@ -352,13 +295,14 @@
         function startMission() {
             const groupNameInput = document.getElementById('groupNameInput');
             const studentNameInput = document.getElementById('studentNameInput');
+            const studentNumberInput = document.getElementById('studentNumberInput');
+            
             appData.state.groupName = groupNameInput.value.trim();
             appData.state.studentName = studentNameInput.value.trim();
+            appData.state.studentNumber = studentNumberInput.value;
             
-            if (!appData.state.groupName || !appData.state.studentName) {
-                // Using a custom modal for alert is better, but for simplicity, standard alert is used.
-                // In a real app, replace this with a styled modal dialog.
-                alert('모둠명과 이름을 모두 입력해주세요!');
+            if (!appData.state.groupName || !appData.state.studentName || !appData.state.studentNumber) {
+                alert('모둠명, 번호, 이름을 모두 입력(선택)해주세요!');
                 return;
             }
             showScreen('role-screen');
@@ -508,10 +452,12 @@
             const finalRoleEl = document.getElementById('final-role');
             const finalGroupNameEl = document.getElementById('final-group-name');
             const finalStudentNameEl = document.getElementById('final-student-name');
+            const finalStudentNumberEl = document.getElementById('final-student-number');
             const finalListEl = document.getElementById('final-list');
 
             finalGroupNameEl.textContent = appData.state.groupName;
             finalStudentNameEl.textContent = appData.state.studentName;
+            finalStudentNumberEl.textContent = appData.state.studentNumber;
             finalRoleEl.textContent = appData.roles[appData.state.selectedRole].name;
             finalListEl.innerHTML = '';
             
@@ -537,13 +483,13 @@
         function downloadReport() {
             const reportContent = document.getElementById('report-content');
             const groupName = appData.state.groupName || '모둠없음';
+            const studentNumber = appData.state.studentNumber || '번호없음';
             const studentName = appData.state.studentName || '이름없음';
-            const fileName = `핑키네프로젝트001_${groupName}_${studentName}.png`;
+            const fileName = `핑키네프로젝트001_${groupName}_${studentNumber}번${studentName}.png`;
 
             html2canvas(reportContent, { 
                 backgroundColor: "#172a46",
                 onclone: (document) => {
-                     // Ensure text is visible on the canvas
                      document.getElementById('report-content').style.color = '#e6f1ff';
                 }
             }).then(canvas => {
@@ -557,16 +503,31 @@
         function restart() {
             appData.state.groupName = null;
             appData.state.studentName = null;
+            appData.state.studentNumber = null;
             appData.state.selectedRole = null;
             appData.state.rankedItems = [];
             document.getElementById('groupNameInput').value = '';
             document.getElementById('studentNameInput').value = '';
+            document.getElementById('studentNumberInput').selectedIndex = 0;
             document.getElementById('rank-list').innerHTML = '';
             initializeItems();
             showScreen('intro-screen');
         }
         
+        function populateStudentNumbers() {
+            const selectEl = document.getElementById('studentNumberInput');
+            selectEl.innerHTML = '<option value="">-- 번호를 선택하세요 --</option>';
+            for (let i = 1; i <= 40; i++) {
+                const numberString = String(i).padStart(2, '0');
+                const option = document.createElement('option');
+                option.value = numberString;
+                option.textContent = numberString;
+                selectEl.appendChild(option);
+            }
+        }
+
         window.onload = () => {
+            populateStudentNumbers();
             initializeItems();
         };
 
