@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>달 조난 상황 생존 시뮬레이션</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!--
+        Copyright (c) 2025 [Pinky]
+        This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+        You should have received a copy of the license along with this work. If not, see <http://creativecommons.org/licenses/by-nc-sa/4.0/>.
+    -->
+    <!-- Chosen Palette: Cosmic Harmony (Deep Blue, Slate Gray, Muted Orange, Cream) -->
+    <!-- Application Structure Plan: A linear, multi-stage single-page application. The flow is: 1. Intro -> 2. Role Selection -> 3. Knowledge Briefing -> 4. Main Ranking Activity -> 5. Final Report & Save. This step-by-step structure is chosen for its simplicity and clarity, making it easy for 5th-grade students to follow without getting overwhelmed. It guides them through a narrative journey, enhancing engagement and ensuring they complete each cognitive step (understanding the scenario, adopting a role, processing information, making decisions) before moving to the next. -->
+    <!-- Visualization & Content Choices: 
+        - Scenario/Roles/Knowledge: Presented as clear, static text on distinct screens to avoid cognitive overload. Roles are visualized with large, friendly Unicode icons on clickable cards for intuitive selection. Knowledge is updated with user-provided content and is viewable on demand via a modal.
+        - 15 Survival Items: Displayed as interactive cards in a "pool". Each card is draggable and clickable. Clicking opens a modal with a very simple, neutral description. The info button remains visible even after ranking. When returned to the pool, the item reverts to its original state.
+        - Priority Ranking: A drag-and-drop list powered by SortableJS provides a tangible, kinesthetic way to rank items. The guiding hint text has been removed as per user request.
+        - Justification: A simple text input appears next to each ranked item, directly linking the action (ranking) to the reason.
+        - Final Report: A static, read-only summary of the student's choices, which can be saved as an image with a custom filename based on group and student name.
+        - Library/Method: Vanilla JS for state and navigation, SortableJS for interaction, html2canvas for output.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0a192f; /* Deep Navy Blue */
+            color: #e6f1ff;
+        }
+        .screen { display: none; }
+        .active-screen { display: block; }
+        .item-card {
+            touch-action: none; /* Recommended for SortableJS */
+            cursor: grab;
+        }
+        .sortable-ghost {
+            background: #4a5568;
+            opacity: 0.5;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+            padding: 1rem;
+        }
+        .modal-content {
+            position: relative;
+            margin: 5% auto;
+            padding: 2rem;
+            width: 95%;
+            max-width: 500px;
+        }
+        @media (min-width: 640px) {
+            .modal-content {
+                margin: 10% auto;
+            }
+        }
+    </style>
+</head>
+<body class="w-full min-h-screen flex items-center justify-center p-2 sm:p-4">
+
+    <div id="app-container" class="w-full max-w-5xl mx-auto bg-[#172a46] bg-opacity-80 backdrop-blur-sm rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
+
+        <!-- Screen 1: Intro -->
+        <div id="intro-screen" class="screen active-screen text-center">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">달에서 길을 잃다</h1>
+            <p class="text-base sm:text-lg md:text-xl text-slate-300 mb-6 max-w-2xl mx-auto">
+                당신이 탄 우주선이 달에 불시착했습니다.<br>
+                살아남기 위해, 200km 떨어진 구조선까지 가야 합니다.<br>
+                주어진 15개 물품의 생존 우선순위를 정하고, 그 이유를 설명하세요!
+            </p>
+            <div class="max-w-sm mx-auto mb-8 space-y-4">
+                <div>
+                    <label for="groupNameInput" class="block mb-2 text-sm font-medium text-slate-300">모둠명을 입력하세요</label>
+                    <input type="text" id="groupNameInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" placeholder="예) 1모둠" required>
+                </div>
+                <div>
+                    <label for="studentNameInput" class="block mb-2 text-sm font-medium text-slate-300">이름을 입력하세요</label>
+                    <input type="text" id="studentNameInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" placeholder="예) 홍길동" required>
+                </div>
+            </div>
+            <button onclick="startMission()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-6 sm:px-8 rounded-lg transition-transform transform hover:scale-105">
+                미션 시작
+            </button>
+            <p class="text-xs text-slate-500 mt-8">made by.핑키네</p>
+        </div>
+
+        <!-- Screen 2: Role Selection -->
+        <div id="role-screen" class="screen">
+            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-6">당신의 전문 분야를 선택하세요</h2>
+            <p class="text-center text-slate-300 mb-8">선택한 역할에 따라 특별한 전문 지식을 얻게 됩니다.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div onclick="selectRole('scientist')" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
+                    <div class="text-5xl sm:text-6xl mb-4">🔬</div>
+                    <h3 class="text-xl sm:text-2xl font-bold">우주과학자</h3>
+                    <p class="text-slate-400 text-sm sm:text-base">달의 환경과 물리 법칙에 대해 깊이 이해하고 있습니다.</p>
+                </div>
+                <div onclick="selectRole('explorer')" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
+                    <div class="text-5xl sm:text-6xl mb-4">🧭</div>
+                    <h3 class="text-xl sm:text-2xl font-bold">탐험가</h3>
+                    <p class="text-slate-400 text-sm sm:text-base">험난한 지형을 돌파하고 길을 찾는 데 능숙합니다.</p>
+                </div>
+                <div onclick="selectRole('communicator')" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
+                    <div class="text-5xl sm:text-6xl mb-4">📡</div>
+                    <h3 class="text-xl sm:text-2xl font-bold">통신전문가</h3>
+                    <p class="text-slate-400 text-sm sm:text-base">장비를 활용해 구조 신호를 보내는 방법을 알고 있습니다.</p>
+                </div>
+                <div onclick="selectRole('medic')" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
+                    <div class="text-5xl sm:text-6xl mb-4">🩺</div>
+                    <h3 class="text-xl sm:text-2xl font-bold">의료진</h3>
+                    <p class="text-slate-400 text-sm sm:text-base">극한 상황에서 생명을 유지하는 방법을 알고 있습니다.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Screen 3: Knowledge Briefing -->
+        <div id="knowledge-screen" class="screen">
+            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-2">전문 지식 브리핑</h2>
+            <p id="role-title" class="text-center text-orange-400 font-bold text-lg mb-6"></p>
+            <div id="knowledge-list" class="bg-slate-800 p-4 sm:p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-300 max-h-[50vh] overflow-y-auto">
+                <!-- Knowledge items will be injected here by JS -->
+            </div>
+            <div class="text-center mt-8">
+                 <button onclick="showScreen('main-screen')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                    물품 순위 정하기
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen 4: Main Ranking Activity -->
+        <div id="main-screen" class="screen">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                <h2 class="text-2xl sm:text-3xl font-bold text-center flex-grow">생존 물품 우선순위 정하기</h2>
+                <button onclick="openKnowledgeModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex-shrink-0 w-full sm:w-auto">
+                    내 전문지식 보기 🧠
+                </button>
+            </div>
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Left: Item Pool -->
+                <div class="w-full md:w-1/3">
+                    <h3 class="font-bold text-xl mb-4 text-center">사용 가능한 물품</h3>
+                    <div id="items-pool" class="bg-slate-800 p-4 rounded-lg min-h-[300px] sm:min-h-[400px] space-y-2">
+                        <!-- Item cards will be injected here by JS -->
+                    </div>
+                </div>
+                <!-- Right: Ranking List -->
+                <div class="w-full md:w-2/3">
+                    <h3 class="font-bold text-xl mb-4 text-center">나의 생존 키트 순위</h3>
+                    <div id="rank-list" class="bg-slate-800 p-4 rounded-lg min-h-[300px] sm:min-h-[400px]">
+                       <!-- Ranked items will be dropped here -->
+                    </div>
+                </div>
+            </div>
+             <div class="text-center mt-8">
+                 <button id="finish-button" onclick="generateReport()" class="bg-green-600 hover:bg-green-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>
+                    결과 보고서 만들기
+                </button>
+            </div>
+        </div>
+        
+        <!-- Screen 5: Final Report -->
+        <div id="report-screen" class="screen">
+             <div id="report-content" class="p-2">
+                <h2 class="text-2xl sm:text-3xl font-bold text-center mb-4">나의 최종 생존 전략</h2>
+                <p class="text-center text-slate-300 mb-8">
+                    모둠: <span id="final-group-name" class="font-bold text-cyan-400"></span> / 
+                    이름: <span id="final-student-name" class="font-bold text-cyan-400"></span> / 
+                    전문 분야: <span id="final-role" class="font-bold text-orange-400"></span>
+                </p>
+                <div id="final-list" class="space-y-3 bg-slate-800 p-4 sm:p-6 rounded-lg">
+                    <!-- Final report will be generated here -->
+                </div>
+            </div>
+            <div class="text-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
+                <button onclick="downloadReport()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                    결과 이미지로 저장하기
+                </button>
+                 <button onclick="restart()" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                    다시하기
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Item Modal -->
+    <div id="item-modal" class="modal flex items-center justify-center">
+        <div class="modal-content bg-slate-800 rounded-lg border border-slate-600">
+            <span onclick="closeModal()" class="absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
+            <div id="modal-body" class="text-white">
+                <!-- Modal content will be injected here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Knowledge Modal -->
+    <div id="knowledge-modal" class="modal flex items-center justify-center">
+        <div class="modal-content bg-slate-800 rounded-lg border border-slate-600">
+            <span onclick="closeKnowledgeModal()" class="absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
+            <div id="knowledge-modal-body" class="text-white">
+                <!-- Knowledge modal content will be injected here -->
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const appData = {
+            roles: {
+                scientist: {
+                    name: '우주과학자',
+                    knowledge: [
+                        "달에는 공기(산소)가 전혀 없어요",
+                        "달에서 불은 탈 수 없어요 (산소가 없으니까)",
+                        "낮에는 120도, 밤에는 -170도예요",
+                        "달에는 자기장이 없어서 방사선이 많이 들어와요",
+                        "달에서는 중력이 약해서 높이 뛸 수 있어요",
+                        "물은 진공 상태에서 끓어요",
+                        "우주복에는 이미 온도 조절 기능이 있어요",
+                        "우주복 안의 산소는 보통 6-8시간 정도 쓸 수 있어요",
+                        "우주인들은 보통 기저귀를 입고 우주복을 입어요",
+                        "달의 지름은 3,474km예요",
+                        "달은 지구에서 38만km 떨어져 있어요",
+                        "달은 약 45억년 전에 만들어졌어요",
+                        "달에는 토끼가 살고 있다는 전설이 있어요",
+                        "달의 바다는 실제로는 물이 없는 평원이에요",
+                        "달에는 산소가 없다는 사실이 어떤 물품에 영향을 줄까요?",
+                        "극한의 온도 환경에서 필요한 것은 무엇일까요?",
+                        "우주복의 기능을 생각하면 어떤 물품이 중복될까요?"
+                    ]
+                },
+                explorer: {
+                    name: '탐험가',
+                    knowledge: [
+                        "달에는 지구처럼 자기장이 없어서 나침반이 작동 안 해요",
+                        "밤하늘의 별을 보고 방향을 찾을 수 있어요",
+                        "달에서는 소리가 들리지 않아요 (공기가 없어서)",
+                        "200km는 아주 먼 거리예요 (서울에서 대전 정도)",
+                        "높은 곳에서 떨어져도 천천히 떨어져요",
+                        "끈이나 로프는 여러 용도로 쓸 수 있어요",
+                        "길을 잃었을 때는 한 곳에 머물러야 한다고 배웠어요",
+                        "응급상황에서는 밝은 색깔 옷이 좋아요",
+                        "야외에서는 호루라기로 도움을 요청해요",
+                        "산에서는 해가 지면 급격히 추워져요",
+                        "지구에서 산을 오를 때는 항상 물을 많이 가져가요",
+                        "등산할 때는 따뜻한 옷을 입어야 해요",
+                        "숲에서는 이끼가 있는 쪽이 북쪽이에요",
+                        "캠핑할 때는 텐트를 바람 반대쪽에 쳐야 해요",
+                        "달에서의 길찾기는 지구와 어떻게 다를까요?",
+                        "200km라는 긴 거리를 이동하려면 무엇이 필요할까요?",
+                        "지구에서의 탐험 상식이 달에서도 통할까요?"
+                    ]
+                },
+                communicator: {
+                    name: '통신전문가',
+                    knowledge: [
+                        "태양열로 충전되는 장비는 낮에만 충전돼요",
+                        "무전기는 배터리가 떨어지면 쓸 수 없어요",
+                        "달에서는 전파가 지구보다 잘 전달돼요 (방해물이 없어서)",
+                        "밝은 신호는 멀리서도 볼 수 있어요",
+                        "조명탄은 진공에서도 탈 수 있게 만들어졌어요",
+                        "응급신호는 3번씩 반복해야 해요",
+                        "구조대가 오고 있는지는 모르겠어요",
+                        "보트에는 풍선처럼 압축가스가 가득 들어 있어요",
+                        "금속은 전기를 잘 통해요",
+                        "휴대폰은 보통 하루 정도 배터리가 지속돼요",
+                        "WiFi는 벽을 통과하기 어려워요",
+                        "라디오는 AM과 FM 두 종류가 있어요",
+                        "비가 올 때는 전자기기를 조심해야 해요",
+                        "블루투스는 10m 정도까지 연결돼요",
+                        "달에서 구조받으려면 어떤 방법이 가장 좋을까요?",
+                        "배터리와 전력 공급은 어떻게 해결할까요?",
+                        "지구에서 쓰던 통신 방법이 달에서도 통할까요?"
+                    ]
+                },
+                medic: {
+                    name: '의료진',
+                    knowledge: [
+                        "우주복이 찢어지면 매우 위험해요",
+                        "작은 상처도 달에서는 감염될 수 있어요",
+                        "총이나 조명탄은 다칠 위험이 있어요",
+                        "응급처치할 때는 환자를 따뜻하게 해줘야 해요",
+                        "몸의 체온과 수분을 유지하는 것이 중요해요",
+                        "탈수되면 판단력이 떨어져요",
+                        "영양 상태가 나쁘면 체력이 떨어져요",
+                        "스트레스받으면 실수를 많이 해요",
+                        "분유는 영양가가 있지만 물에 타서 먹어야 해요",
+                        "하루에 물을 8잔 정도 마셔야 건강해요",
+                        "감기에 걸리면 따뜻하게 해야 해요",
+                        "운동 전에는 스트레칭을 해야 해요",
+                        "손을 자주 씻어야 세균을 막을 수 있어요",
+                        "비타민C는 감기 예방에 좋아요",
+                        "달에서 건강을 지키려면 무엇이 가장 중요할까요?",
+                        "응급상황이 생겼을 때 어떻게 대처해야 할까요?",
+                        "지구에서의 건강 상식이 달에서도 적용될까요?"
+                    ]
+                },
+            },
+            items: [
+                { id: 1, name: '산소통 45kg (2정)', icon: '💨', description: '호흡에 필요한 산소가 압축되어 들어있는 금속 용기 2개입니다.' },
+                { id: 2, name: '물 (19L)', icon: '💧', description: '마실 수 있는 깨끗한 물이 담긴 통입니다.' },
+                { id: 3, name: '달에서 본 별자리 지도', icon: '🗺️', description: '달의 북반구에서 보이는 별들의 위치를 표시한 천체 지도입니다.' },
+                { id: 4, name: '음식 (우주식)', icon: '🍔', description: '물 없이 바로 섭취할 수 있도록 농축된 비상 식량입니다.' },
+                { id: 5, name: '태양열 충전식 FM 무전기', icon: '📻', description: '태양 빛으로 충전하여 단거리 주파수 변조(FM) 방식으로 통신하는 기기입니다.' },
+                { id: 6, name: '15m 길이의 나일론 끈', icon: '🧶', description: '길고 튼튼한 나일론 소재의 끈입니다.' },
+                { id: 7, name: '구급 상자', icon: '🩹', description: '소독약, 붕대, 의료용 테이프 등이 들어있는 상자입니다.' },
+                { id: 8, name: '낙하산 천', icon: '🪂', description: '공기 저항을 이용하기 위한 크고 질긴 천입니다.' },
+                { id: 9, name: '구명 고무보트', icon: '🚤', description: '물 위에서 사용하는 고무 재질의 보트이며, 이산화탄소 가스통으로 부풀립니다.' },
+                { id: 10, name: '신호용 조명탄', icon: '🧨', description: '먼 곳에 신호를 보내기 위해 밝은 빛을 내며 타는 폭죽입니다.' },
+                { id: 11, name: '45구경 권총', icon: '🔫', description: '총알을 발사하는 개인용 화기입니다.' },
+                { id: 12, name: '휴대용 난방기', icon: '🔥', description: '주변을 따뜻하게 데우는 휴대용 기기입니다.' },
+                { id: 13, name: '분유 한 상자', icon: '🍼', description: '아기에게 영양을 공급하기 위한 분말 형태의 우유입니다.' },
+                { id: 14, name: '자석 나침반', icon: '🧭', description: '지구의 자기장을 이용하여 방향을 가리키는 도구입니다.' },
+                { id: 15, name: '성냥이 들어있는 상자', icon: '📦', description: '마찰을 통해 불을 붙이는 도구인 성냥이 들어있는 상자입니다.' },
+            ],
+            state: {
+                currentScreen: 'intro-screen',
+                groupName: null,
+                studentName: null,
+                selectedRole: null,
+                rankedItems: [],
+            }
+        };
+
+        const itemsPoolEl = document.getElementById('items-pool');
+        const rankListEl = document.getElementById('rank-list');
+        const modalEl = document.getElementById('item-modal');
+        const modalBodyEl = document.getElementById('modal-body');
+        const knowledgeModalEl = document.getElementById('knowledge-modal');
+        const knowledgeModalBodyEl = document.getElementById('knowledge-modal-body');
+
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active-screen'));
+            document.getElementById(screenId).classList.add('active-screen');
+            appData.state.currentScreen = screenId;
+        }
+
+        function startMission() {
+            const groupNameInput = document.getElementById('groupNameInput');
+            const studentNameInput = document.getElementById('studentNameInput');
+            appData.state.groupName = groupNameInput.value.trim();
+            appData.state.studentName = studentNameInput.value.trim();
+            
+            if (!appData.state.groupName || !appData.state.studentName) {
+                alert('모둠명과 이름을 모두 입력해주세요!');
+                return;
+            }
+            showScreen('role-screen');
+        }
+
+        function selectRole(roleId) {
+            appData.state.selectedRole = roleId;
+            const role = appData.roles[roleId];
+            document.getElementById('role-title').innerText = `[${role.name}]`;
+            const knowledgeListEl = document.getElementById('knowledge-list');
+            knowledgeListEl.innerHTML = '';
+            role.knowledge.forEach(fact => {
+                const li = document.createElement('li');
+                li.className = "bg-slate-700 p-3 rounded";
+                li.textContent = fact;
+                knowledgeListEl.appendChild(li);
+            });
+            showScreen('knowledge-screen');
+        }
+        
+        function createPoolItemHTML(item) {
+            return `
+                <span>${item.icon} ${item.name}</span>
+                <button onclick="openModal(${item.id})" class="text-xs bg-sky-600 hover:bg-sky-500 text-white py-1 px-2 rounded">정보</button>
+            `;
+        }
+
+        function initializeItems() {
+            itemsPoolEl.innerHTML = '';
+            appData.items.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.dataset.id = item.id;
+                itemEl.className = 'item-card bg-slate-700 p-3 rounded-md flex justify-between items-center';
+                itemEl.innerHTML = createPoolItemHTML(item);
+                itemsPoolEl.appendChild(itemEl);
+            });
+            checkFinishButton();
+        }
+        
+        function openModal(itemId) {
+            const item = appData.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            modalBodyEl.innerHTML = `
+                <h3 class="text-2xl font-bold mb-4">${item.icon} ${item.name}</h3>
+                <p class="mb-4">${item.description}</p>
+                <p class="text-sm text-slate-400">${(item.id === 9 || item.id === 11) ? '💡 이 물품에는 숨겨진 가치가 있을 수 있습니다.' : ''}</p>
+            `;
+            modalEl.style.display = "flex";
+        }
+
+        function closeModal() {
+            modalEl.style.display = "none";
+        }
+        
+        function openKnowledgeModal() {
+            if (!appData.state.selectedRole) return;
+            const role = appData.roles[appData.state.selectedRole];
+            knowledgeModalBodyEl.innerHTML = `
+                <h3 class="text-2xl font-bold mb-4">[${role.name}] 전문 지식</h3>
+                <ul class="list-disc list-inside space-y-2 max-h-[60vh] overflow-y-auto p-2">
+                    ${role.knowledge.map(fact => `<li class="mb-1">${fact}</li>`).join('')}
+                </ul>
+            `;
+            knowledgeModalEl.style.display = "flex";
+        }
+
+        function closeKnowledgeModal() {
+            knowledgeModalEl.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modalEl) {
+                closeModal();
+            }
+            if (event.target == knowledgeModalEl) {
+                closeKnowledgeModal();
+            }
+        }
+        
+        function renderRankedItemContent(itemId, index) {
+            const item = appData.items.find(i => i.id == itemId);
+            return `
+                <div class="flex items-center justify-between mb-2">
+                    <div class="font-bold text-lg text-orange-400 flex items-center">
+                        <span class="rank-number mr-2">${index + 1}위.</span>
+                        <span>${item.icon} ${item.name}</span>
+                    </div>
+                    <button onclick="openModal(${item.id})" class="text-xs bg-sky-600 hover:bg-sky-500 text-white py-1 px-2 rounded ml-auto">정보</button>
+                </div>
+                <textarea data-reason-id="${item.id}" class="w-full bg-slate-900 text-white rounded p-2 text-sm mt-2" rows="2" placeholder="이 물품을 이 순위로 정한 이유는..."></textarea>
+            `;
+        }
+        
+        function updateRankNumbers() {
+            const rankedItems = rankListEl.querySelectorAll('.ranked-item');
+            rankedItems.forEach((item, index) => {
+                item.querySelector('.rank-number').textContent = `${index + 1}위.`;
+            });
+            checkFinishButton();
+        }
+
+        function checkFinishButton() {
+            const finishButton = document.getElementById('finish-button');
+            const itemCount = rankListEl.querySelectorAll('.ranked-item').length;
+            if (itemCount === 15) {
+                finishButton.disabled = false;
+            } else {
+                finishButton.disabled = true;
+            }
+        }
+        
+        new Sortable(itemsPoolEl, {
+            group: 'shared',
+            animation: 150,
+            onAdd: function (evt) {
+                const itemEl = evt.item;
+                const itemId = itemEl.dataset.id;
+                const item = appData.items.find(i => i.id == itemId);
+
+                itemEl.className = 'item-card bg-slate-700 p-3 rounded-md flex justify-between items-center';
+                itemEl.innerHTML = createPoolItemHTML(item);
+                updateRankNumbers();
+            }
+        });
+
+        new Sortable(rankListEl, {
+            group: 'shared',
+            animation: 150,
+            onAdd: function (evt) {
+                const itemEl = evt.item;
+                const itemId = itemEl.dataset.id;
+                const index = evt.newDraggableIndex;
+                
+                itemEl.className = 'ranked-item bg-slate-700 p-3 rounded-md';
+                itemEl.innerHTML = renderRankedItemContent(itemId, index);
+                
+                updateRankNumbers();
+            },
+            onUpdate: function(evt) {
+                updateRankNumbers();
+            }
+        });
+
+        function generateReport() {
+            const finalRoleEl = document.getElementById('final-role');
+            const finalGroupNameEl = document.getElementById('final-group-name');
+            const finalStudentNameEl = document.getElementById('final-student-name');
+            const finalListEl = document.getElementById('final-list');
+
+            finalGroupNameEl.textContent = appData.state.groupName;
+            finalStudentNameEl.textContent = appData.state.studentName;
+            finalRoleEl.textContent = appData.roles[appData.state.selectedRole].name;
+            finalListEl.innerHTML = '';
+            
+            const rankedElements = Array.from(rankListEl.querySelectorAll('.ranked-item'));
+
+            rankedElements.forEach((el, index) => {
+                const itemId = el.dataset.id;
+                const item = appData.items.find(i => i.id == itemId);
+                const reason = el.querySelector(`textarea[data-reason-id="${itemId}"]`).value;
+
+                const reportItem = document.createElement('div');
+                reportItem.className = 'p-3 bg-slate-900 rounded-md';
+                reportItem.innerHTML = `
+                    <p class="font-bold text-lg">${index + 1}위. ${item.icon} ${item.name}</p>
+                    <p class="text-sm text-slate-300 pl-4 mt-1">이유: ${reason || '작성하지 않음'}</p>
+                `;
+                finalListEl.appendChild(reportItem);
+            });
+
+            showScreen('report-screen');
+        }
+        
+        function downloadReport() {
+            const reportContent = document.getElementById('report-content');
+            const groupName = appData.state.groupName || '모둠없음';
+            const studentName = appData.state.studentName || '이름없음';
+            const fileName = `핑키네프로젝트001_${groupName}_${studentName}.png`;
+
+            html2canvas(reportContent, { 
+                backgroundColor: "#172a46",
+                onclone: (document) => {
+                     // Ensure text is visible on the canvas
+                    document.getElementById('report-content').style.color = '#e6f1ff';
+                }
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+        
+        function restart() {
+            appData.state.groupName = null;
+            appData.state.studentName = null;
+            appData.state.selectedRole = null;
+            appData.state.rankedItems = [];
+            document.getElementById('groupNameInput').value = '';
+            document.getElementById('studentNameInput').value = '';
+            document.getElementById('rank-list').innerHTML = '';
+            initializeItems();
+            showScreen('intro-screen');
+        }
+        
+        window.onload = () => {
+            initializeItems();
+        };
+
+    </script>
+</body>
+</html>
