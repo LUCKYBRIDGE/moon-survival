@@ -338,7 +338,7 @@
             showScreen('role-screen');
         };
 
-        const selectRole = (roleId) => {
+        const selectRole = (roleId, changeScreen = true) => {
             appData.state.selectedRole = roleId;
             const role = appData.roles[roleId];
             dom.roleTitle.innerText = `[${role.name}]`;
@@ -372,7 +372,9 @@
                 dom.knowledgeList.appendChild(itemInfoEl);
             });
 
-            showScreen('knowledge-screen');
+            if (changeScreen) {
+                showScreen('knowledge-screen');
+            }
         };
         
         const createPoolItemHTML = (item) => {
@@ -596,18 +598,10 @@
                 dom.itemsPoolEl.innerHTML = '';
                 dom.rankListEl.innerHTML = '';
 
-                savedState.poolItemIds.forEach(itemId => {
-                    const item = appData.items.find(i => i.id === itemId);
-                    if (item) {
-                        const itemEl = document.createElement('div');
-                        itemEl.dataset.id = item.id;
-                        itemEl.className = 'item-card bg-slate-700 p-2 rounded-md flex items-center gap-2';
-                        itemEl.innerHTML = createPoolItemHTML(item);
-                        dom.itemsPoolEl.appendChild(itemEl);
-                    }
-                });
-                
-                savedState.rankedItemIds.forEach((itemId, index) => {
+                const poolItemIds = new Set(savedState.poolItemIds || appData.items.map(i => i.id));
+                const rankedItemIds = savedState.rankedItemIds || [];
+
+                rankedItemIds.forEach((itemId, index) => {
                     const item = appData.items.find(i => i.id === itemId);
                     if (item) {
                         const itemEl = document.createElement('div');
@@ -619,10 +613,22 @@
                             itemEl.querySelector('textarea').value = savedState.reasons[itemId];
                         }
                     }
+                    poolItemIds.delete(itemId);
+                });
+                
+                poolItemIds.forEach(itemId => {
+                    const item = appData.items.find(i => i.id === itemId);
+                    if(item) {
+                        const itemEl = document.createElement('div');
+                        itemEl.dataset.id = item.id;
+                        itemEl.className = 'item-card bg-slate-700 p-2 rounded-md flex items-center gap-2';
+                        itemEl.innerHTML = createPoolItemHTML(item);
+                        dom.itemsPoolEl.appendChild(itemEl);
+                    }
                 });
                 
                 if(savedState.selectedRole) {
-                    selectRole(savedState.selectedRole);
+                    selectRole(savedState.selectedRole, false);
                 }
                 
                 showScreen(savedState.currentScreen || 'intro-screen');
@@ -697,6 +703,7 @@
         window.restart = restart;
         window.closeModal = closeModal;
         window.closeKnowledgeModal = closeKnowledgeModal;
+        window.showScreen = showScreen;
         
         window.onload = () => {
             populateStudentNumbers();
