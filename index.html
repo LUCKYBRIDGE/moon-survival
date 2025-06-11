@@ -136,7 +136,7 @@
         <div id="knowledge-screen" class="screen">
             <h2 class="text-2xl sm:text-3xl font-bold text-center mb-2">전문 지식 브리핑</h2>
             <p id="role-title" class="text-center text-orange-400 font-bold text-lg mb-6"></p>
-            <div id="knowledge-list" class="bg-slate-800 p-4 sm:p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-300 max-h-[50vh] lg:max-h-[60vh] overflow-y-auto">
+            <div id="knowledge-list" class="bg-slate-800 p-4 sm:p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-300 max-h-[60vh] overflow-y-auto">
                 <!-- Knowledge items will be injected here by JS -->
             </div>
             <div class="text-center mt-8">
@@ -313,20 +313,43 @@
             const role = appData.roles[roleId];
             document.getElementById('role-title').innerText = `[${role.name}]`;
             const knowledgeListEl = document.getElementById('knowledge-list');
-            knowledgeListEl.innerHTML = '';
+            knowledgeListEl.innerHTML = ''; 
+
+            const roleKnowledgeTitle = document.createElement('h4');
+            roleKnowledgeTitle.className = "text-lg font-bold text-orange-300 mt-4 md:col-span-2";
+            roleKnowledgeTitle.textContent = "🚀 전문 지식";
+            knowledgeListEl.appendChild(roleKnowledgeTitle);
+
             role.knowledge.forEach(fact => {
                 const li = document.createElement('li');
                 li.className = "bg-slate-700 p-3 rounded";
-                li.textContent = fact;
+                li.textContent = `- ${fact}`;
                 knowledgeListEl.appendChild(li);
             });
-            showScreen('main-screen');
+
+            const separator = document.createElement('hr');
+            separator.className = "border-slate-600 my-4 md:col-span-2";
+            knowledgeListEl.appendChild(separator);
+
+            const itemInfoTitle = document.createElement('h4');
+            itemInfoTitle.className = "text-lg font-bold text-cyan-300 md:col-span-2";
+            itemInfoTitle.textContent = "🎒 물품 정보";
+            knowledgeListEl.appendChild(itemInfoTitle);
+
+            appData.items.forEach(item => {
+                const itemInfoEl = document.createElement('div');
+                itemInfoEl.className = "bg-slate-700 p-3 rounded";
+                itemInfoEl.innerHTML = `<p class="font-bold">${item.icon} ${item.name}</p><p class="text-sm text-slate-400 mt-1">${item.description}</p>`;
+                knowledgeListEl.appendChild(itemInfoEl);
+            });
+
+            showScreen('knowledge-screen');
         }
         
         function createPoolItemHTML(item) {
             return `
                 <span class="truncate">${item.icon} ${item.name}</span>
-                <button onclick="openModal(${item.id}, event)" class="text-xs bg-sky-600 hover:bg-sky-500 text-white py-1 px-2 rounded flex-shrink-0">정보</button>
+                <button data-info-id="${item.id}" class="text-xs bg-sky-600 hover:bg-sky-500 text-white py-1 px-2 rounded flex-shrink-0">정보</button>
             `;
         }
 
@@ -342,8 +365,7 @@
             checkFinishButton();
         }
         
-        function openModal(itemId, event) {
-            event.stopPropagation(); 
+        function openModal(itemId) {
             const item = appData.items.find(i => i.id === itemId);
             if (!item) return;
 
@@ -362,18 +384,69 @@
         function openKnowledgeModal() {
             if (!appData.state.selectedRole) return;
             const role = appData.roles[appData.state.selectedRole];
-            knowledgeModalBodyEl.innerHTML = `
-                <h3 class="text-2xl font-bold mb-4">[${role.name}] 전문 지식</h3>
-                <ul class="list-disc list-inside space-y-2 max-h-[60vh] overflow-y-auto p-2">
-                    ${role.knowledge.map(fact => `<li class="mb-1">${fact}</li>`).join('')}
-                </ul>
-            `;
+            knowledgeModalBodyEl.innerHTML = '';
+
+            const mainTitle = document.createElement('h3');
+            mainTitle.className = "text-2xl font-bold mb-4 text-center";
+            mainTitle.textContent = "정보 다시보기";
+            knowledgeModalBodyEl.appendChild(mainTitle);
+            
+            const scrollContainer = document.createElement('div');
+            scrollContainer.className = "max-h-[60vh] overflow-y-auto p-2 space-y-4";
+            
+            const roleSection = document.createElement('div');
+            const roleTitle = document.createElement('h4');
+            roleTitle.className = "text-lg font-bold text-orange-300 mb-2";
+            roleTitle.textContent = `🚀 [${role.name}] 전문 지식`;
+            roleSection.appendChild(roleTitle);
+
+            const roleList = document.createElement('ul');
+            roleList.className = "list-disc list-inside space-y-1 text-slate-300";
+            role.knowledge.forEach(fact => {
+                const li = document.createElement('li');
+                li.textContent = fact;
+                roleList.appendChild(li);
+            });
+            roleSection.appendChild(roleList);
+            scrollContainer.appendChild(roleSection);
+
+            const separator = document.createElement('hr');
+            separator.className = "border-slate-600";
+            scrollContainer.appendChild(separator);
+
+            const itemSection = document.createElement('div');
+            const itemTitle = document.createElement('h4');
+            itemTitle.className = "text-lg font-bold text-cyan-300 mb-2";
+            itemTitle.textContent = "🎒 물품 정보";
+            itemSection.appendChild(itemTitle);
+
+            const itemListContainer = document.createElement('div');
+            itemListContainer.className = "space-y-3";
+            appData.items.forEach(item => {
+                const itemInfoEl = document.createElement('div');
+                itemInfoEl.className = "bg-slate-900 p-3 rounded";
+                itemInfoEl.innerHTML = `<p class="font-bold">${item.icon} ${item.name}</p><p class="text-sm text-slate-400 mt-1">${item.description}</p>`;
+                itemListContainer.appendChild(itemInfoEl);
+            });
+            itemSection.appendChild(itemListContainer);
+            scrollContainer.appendChild(itemSection);
+            
+            knowledgeModalBodyEl.appendChild(scrollContainer);
+
             knowledgeModalEl.classList.remove('hidden');
         }
 
         function closeKnowledgeModal() {
             knowledgeModalEl.classList.add('hidden');
         }
+        
+        document.addEventListener('click', function(event) {
+            const infoButton = event.target.closest('button[data-info-id]');
+            if (infoButton) {
+                const itemId = parseInt(infoButton.dataset.infoId, 10);
+                openModal(itemId);
+            }
+        });
 
         window.onclick = function(event) {
             if (event.target == modalEl) {
@@ -392,7 +465,7 @@
                         <span class="rank-number mr-2">${index + 1}위.</span>
                         <span>${item.icon} ${item.name}</span>
                     </div>
-                    <button onclick="openModal(${item.id}, event)" class="text-xs bg-sky-600 hover:bg-sky-500 text-white py-1 px-2 rounded ml-auto">정보</button>
+                    <button data-info-id="${item.id}" class="text-xs bg-sky-600 hover:bg-sky-500 text-white py-1 px-2 rounded ml-auto">정보</button>
                 </div>
                 <textarea onmousedown="event.stopPropagation()" data-reason-id="${item.id}" class="w-full bg-slate-900 text-white rounded p-2 text-sm mt-2" rows="2" placeholder="이 물품을 이 순위로 정한 이유는..."></textarea>
             `;
