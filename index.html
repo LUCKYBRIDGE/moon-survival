@@ -158,7 +158,7 @@
                 <!-- Left: Item Pool -->
                 <div class="w-full md:w-1/3">
                     <h3 class="font-bold text-xl mb-4 text-center">사용 가능한 물품</h3>
-                    <div id="items-pool" class="bg-slate-800 p-4 rounded-lg min-h-[300px] md:min-h-[60vh] grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <div id="items-pool" class="bg-slate-800 p-4 rounded-lg min-h-[300px] md:min-h-[60vh] grid grid-cols-1 md:grid-cols-2 gap-3">
                         <!-- Item cards will be injected here by JS -->
                     </div>
                 </div>
@@ -320,7 +320,7 @@
                 li.textContent = fact;
                 knowledgeListEl.appendChild(li);
             });
-            showScreen('knowledge-screen');
+            showScreen('main-screen');
         }
         
         function createPoolItemHTML(item) {
@@ -394,7 +394,7 @@
                     </div>
                     <button onclick="openModal(${item.id}, event)" class="text-xs bg-sky-600 hover:bg-sky-500 text-white py-1 px-2 rounded ml-auto">정보</button>
                 </div>
-                <textarea data-reason-id="${item.id}" class="w-full bg-slate-900 text-white rounded p-2 text-sm mt-2" rows="2" placeholder="이 물품을 이 순위로 정한 이유는..."></textarea>
+                <textarea onmousedown="event.stopPropagation()" data-reason-id="${item.id}" class="w-full bg-slate-900 text-white rounded p-2 text-sm mt-2" rows="2" placeholder="이 물품을 이 순위로 정한 이유는..."></textarea>
             `;
         }
         
@@ -483,7 +483,7 @@
         function downloadReport() {
             const reportContent = document.getElementById('report-content');
             const groupName = appData.state.groupName || '모둠없음';
-            const studentNumber = appData.state.studentNumber || '번호없음';
+            const studentNumber = appData.state.studentNumber || '00';
             const studentName = appData.state.studentName || '이름없음';
             const fileName = `핑키네프로젝트001_${groupName}_${studentNumber}번${studentName}.png`;
 
