@@ -101,7 +101,7 @@
                     <input type="text" id="studentNameInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" placeholder="예) 홍길동" required>
                 </div>
             </div>
-            <button onclick="startMission()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-6 sm:px-8 rounded-lg transition-transform transform hover:scale-105">
+            <button id="start-mission-btn" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-6 sm:px-8 rounded-lg transition-transform transform hover:scale-105">
                 미션 시작
             </button>
             <p class="text-xs text-slate-500 mt-8">made by.핑키네</p>
@@ -112,22 +112,22 @@
             <h2 class="text-2xl sm:text-3xl font-bold text-center mb-6">당신의 전문 분야를 선택하세요</h2>
             <p class="text-center text-slate-300 mb-8">선택한 역할에 따라 특별한 전문 지식을 얻게 됩니다.</p>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                <div onclick="selectRole('scientist')" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
+                <div data-role="scientist" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
                     <div class="text-5xl sm:text-6xl mb-4">🔬</div>
                     <h3 class="text-xl sm:text-2xl font-bold">우주과학자</h3>
                     <p class="text-slate-400 text-sm sm:text-base">달의 환경과 물리 법칙에 대해 깊이 이해하고 있습니다.</p>
                 </div>
-                <div onclick="selectRole('explorer')" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
+                <div data-role="explorer" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
                     <div class="text-5xl sm:text-6xl mb-4">🧭</div>
                     <h3 class="text-xl sm:text-2xl font-bold">탐험가</h3>
                     <p class="text-slate-400 text-sm sm:text-base">험난한 지형을 돌파하고 길을 찾는 데 능숙합니다.</p>
                 </div>
-                <div onclick="selectRole('communicator')" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
+                <div data-role="communicator" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
                     <div class="text-5xl sm:text-6xl mb-4">📡</div>
                     <h3 class="text-xl sm:text-2xl font-bold">통신전문가</h3>
                     <p class="text-slate-400 text-sm sm:text-base">장비를 활용해 구조 신호를 보내는 방법을 알고 있습니다.</p>
                 </div>
-                <div onclick="selectRole('medic')" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
+                <div data-role="medic" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
                     <div class="text-5xl sm:text-6xl mb-4">🩺</div>
                     <h3 class="text-xl sm:text-2xl font-bold">의료진</h3>
                     <p class="text-slate-400 text-sm sm:text-base">극한 상황에서 생명을 유지하는 방법을 알고 있습니다.</p>
@@ -143,7 +143,7 @@
                 <!-- Knowledge items will be injected here by JS -->
             </div>
             <div class="text-center mt-8">
-                 <button onclick="showScreen('main-screen')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                 <button id="go-to-ranking-btn" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
                     물품 순위 정하기
                 </button>
             </div>
@@ -153,7 +153,7 @@
         <div id="main-screen" class="screen">
             <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                 <h2 class="text-2xl sm:text-3xl font-bold text-center flex-grow">생존 물품 우선순위 정하기</h2>
-                <button onclick="openKnowledgeModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex-shrink-0 w-full sm:w-auto">
+                <button id="open-knowledge-modal-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex-shrink-0 w-full sm:w-auto">
                     내 전문지식 보기 🧠
                 </button>
             </div>
@@ -174,7 +174,7 @@
                 </div>
             </div>
              <div class="text-center mt-8">
-                 <button id="finish-button" onclick="generateReport()" class="bg-green-600 hover:bg-green-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>
+                 <button id="finish-button" class="bg-green-600 hover:bg-green-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>
                     결과 보고서 만들기
                 </button>
             </div>
@@ -195,10 +195,10 @@
                 </div>
             </div>
             <div class="text-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
-                <button onclick="downloadReport()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                <button id="download-report-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
                     결과 이미지로 저장하기
                 </button>
-                 <button onclick="restart(true)" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                 <button id="restart-btn" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
                     다시하기
                 </button>
             </div>
@@ -208,7 +208,7 @@
     <!-- Item Modal -->
     <div id="item-modal" class="modal-base hidden">
         <div class="modal-content bg-slate-800 rounded-lg border border-slate-600">
-            <span onclick="closeModal()" class="absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
+            <span id="close-item-modal-btn" class="absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
             <div id="modal-body" class="text-white">
                 <!-- Modal content will be injected here -->
             </div>
@@ -218,7 +218,7 @@
     <!-- Knowledge Modal -->
     <div id="knowledge-modal" class="modal-base hidden">
         <div class="modal-content bg-slate-800 rounded-lg border border-slate-600">
-            <span onclick="closeKnowledgeModal()" class="absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
+            <span id="close-knowledge-modal-btn" class="absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
             <div id="knowledge-modal-body" class="text-white">
                 <!-- Knowledge modal content will be injected here -->
             </div>
@@ -313,8 +313,6 @@
             finalStudentName: document.getElementById('final-student-name'),
             finalRole: document.getElementById('final-role'),
             finalList: document.getElementById('final-list'),
-            resumeBtn: document.getElementById('resume-btn'),
-            startNewBtn: document.getElementById('start-new-btn'),
         };
 
         const SAVE_KEY = 'pinky-moon-survival-save';
@@ -675,18 +673,30 @@
             }
         });
 
-        dom.rankListEl.addEventListener('input', (event) => {
-            if (event.target.tagName === 'TEXTAREA') {
-                saveState();
-            }
-        });
-        
-        dom.appContainer.addEventListener('click', (event) => {
-            const infoButton = event.target.closest('button[data-info-id]');
-            if (infoButton) {
+        document.addEventListener('click', (event) => {
+            const target = event.target;
+            const roleCard = target.closest('.role-card');
+            const infoButton = target.closest('button[data-info-id]');
+
+            if (target.id === 'start-mission-btn') startMission();
+            else if (roleCard) selectRole(roleCard.dataset.role);
+            else if (target.id === 'go-to-ranking-btn') showScreen('main-screen');
+            else if (target.id === 'open-knowledge-modal-btn') openKnowledgeModal();
+            else if (target.id === 'finish-button') generateReport();
+            else if (target.id === 'download-report-btn') downloadReport();
+            else if (target.id === 'restart-btn') restart(true);
+            else if (target.id === 'close-item-modal-btn') closeModal();
+            else if (target.id === 'close-knowledge-modal-btn') closeKnowledgeModal();
+            else if (infoButton) {
                 event.stopPropagation();
                 const itemId = parseInt(infoButton.dataset.infoId, 10);
                 openModal(itemId);
+            }
+        });
+
+        dom.rankListEl.addEventListener('input', (event) => {
+            if (event.target.tagName === 'TEXTAREA') {
+                saveState();
             }
         });
 
@@ -694,33 +704,26 @@
             if (event.target == dom.modalEl) closeModal();
             if (event.target == dom.knowledgeModalEl) closeKnowledgeModal();
         };
-
-        window.startMission = startMission;
-        window.selectRole = selectRole;
-        window.openKnowledgeModal = openKnowledgeModal;
-        window.generateReport = generateReport;
-        window.downloadReport = downloadReport;
-        window.restart = restart;
-        window.closeModal = closeModal;
-        window.closeKnowledgeModal = closeKnowledgeModal;
-        window.showScreen = showScreen;
         
-        window.onload = () => {
+        window.addEventListener('load', () => {
             populateStudentNumbers();
             initializeItems();
             const savedStateJSON = localStorage.getItem(SAVE_KEY);
             if (savedStateJSON) {
-                dom.resumeModalEl.classList.remove('hidden');
+                const resumeBtn = document.getElementById('resume-btn');
+                const startNewBtn = document.getElementById('start-new-btn');
+                if (resumeBtn && startNewBtn) {
+                    dom.resumeModalEl.classList.remove('hidden');
+                    resumeBtn.onclick = () => {
+                        restoreSession();
+                        dom.resumeModalEl.classList.add('hidden');
+                    };
+                    startNewBtn.onclick = () => {
+                        restart(false);
+                    };
+                }
             }
-            dom.resumeBtn.onclick = () => {
-                restoreSession();
-                dom.resumeModalEl.classList.add('hidden');
-            };
-            dom.startNewBtn.onclick = () => {
-                localStorage.removeItem(SAVE_KEY);
-                window.location.reload();
-            };
-        };
+        });
     })();
     </script>
 </body>
