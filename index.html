@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>달 조난 상황 생존 시뮬레이션</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
@@ -32,6 +32,7 @@
             align-items: center;
             justify-content: center;
             overflow-y: auto;
+            padding: 0.5rem;
         }
         .screen { display: none; }
         .active-screen { display: block; }
@@ -39,9 +40,6 @@
             cursor: grab;
             padding: 0.5rem;
             color: #94a3b8;
-        }
-        .drag-handle:hover {
-            color: #e2e8f0;
         }
         .sortable-ghost {
             background: #4a5568;
@@ -103,11 +101,11 @@
             border-style: dashed;
         }
         .rank-slot.empty:hover {
-            background-color: #334155; /* slate-700 */
+            background-color: #334155;
         }
     </style>
 </head>
-<body class="p-2 sm:p-4">
+<body class="p-0 sm:p-2 md:p-4">
 
     <div id="app-wrapper">
         <div id="app-container" class="w-full max-w-7xl mx-auto bg-[#172a46] bg-opacity-80 backdrop-blur-sm rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
@@ -224,11 +222,11 @@
                          <!-- Final report will be generated here -->
                      </div>
                  </div>
-                <div class="text-center mt-8 space-x-4">
+                <div class="text-center mt-8 space-y-3 sm:space-y-0 sm:space-x-4">
                     <button id="open-save-share-modal-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
                         결과 저장하기
                     </button>
-                     <a href="https://pinkylucky.tistory.com/2" target="_blank" rel="noopener noreferrer" class="inline-block bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition">
+                     <a href="https://pinkylucky.tistory.com/2" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-block bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition">
                         NASA 전문가 해설
                     </a>
                 </div>
@@ -248,13 +246,13 @@
     </div>
 
     <!-- Modals and Global Buttons -->
-    <div id="global-buttons" class="fixed bottom-5 left-5 right-5 flex justify-between items-center z-50 pointer-events-none">
-        <button id="back-to-start-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto">처음으로</button>
-        <div id="fullscreen-toggle" class="pointer-events-auto hidden mx-auto">
-            <button id="fullscreen-enter-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105">전체화면</button>
-            <button id="fullscreen-exit-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105 hidden">전체화면 해제</button>
-        </div>
-        <button id="exit-app-btn" class="bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto">종료</button>
+    <div id="global-buttons" class="fixed bottom-4 right-4 flex flex-col space-y-3 z-50 pointer-events-none">
+        <button id="back-to-start-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12 w-12 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto">🏠</button>
+        <button id="fullscreen-toggle" class="bg-gray-600 hover:bg-gray-700 text-white font-bold h-12 w-12 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 pointer-events-auto">
+            <svg id="fullscreen-enter-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 1v4m0 0h-4m4 0l-5-5"></path></svg>
+            <svg id="fullscreen-exit-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v4m0 0h4m-4 0l5-5m11-1V4m0 0h-4m4 0l-5 5M4 8V4m0 0h4M4 4l5 5m11 1v4m0 0h-4m4 0l-5-5"></path></svg>
+        </button>
+        <button id="exit-app-btn" class="bg-red-800 hover:bg-red-700 text-white font-bold h-12 w-12 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto">❌</button>
     </div>
     
     <!-- Item Info Modal -->
@@ -389,8 +387,8 @@
             backToStartBtn: document.getElementById('back-to-start-btn'),
             exitAppBtn: document.getElementById('exit-app-btn'),
             fullscreenToggle: document.getElementById('fullscreen-toggle'),
-            fullscreenEnterBtn: document.getElementById('fullscreen-enter-btn'),
-            fullscreenExitBtn: document.getElementById('fullscreen-exit-btn'),
+            fullscreenEnterIcon: document.getElementById('fullscreen-enter-icon'),
+            fullscreenExitIcon: document.getElementById('fullscreen-exit-icon'),
         };
 
         const SAVE_KEY = 'pinky-moon-survival-save-v5.4';
@@ -468,14 +466,13 @@
                 dom.fullscreenToggle.classList.add('hidden');
             } else {
                 activeScreen.classList.add('active-screen');
+                dom.fullscreenToggle.classList.remove('hidden');
                 if (screenId === 'intro-screen') {
                     dom.backToStartBtn.classList.add('hidden');
                     dom.exitAppBtn.classList.add('hidden');
-                    dom.fullscreenToggle.classList.add('hidden');
                 } else {
                     dom.backToStartBtn.classList.remove('hidden');
                     dom.exitAppBtn.classList.remove('hidden');
-                    dom.fullscreenToggle.classList.remove('hidden');
                 }
             }
             appData.state.currentScreen = screenId;
@@ -756,7 +753,7 @@
                         if (textarea) appData.state.rankedItems[index].reason = textarea.value;
                     }
                 });
-                localStorage.setItem(SAVE_KEY, JSON.stringify({ ...appData.state, version: '5.4' }));
+                localStorage.setItem(SAVE_KEY, JSON.stringify({ ...appData.state, version: '5.5' }));
             } catch (e) { console.error("저장 중 오류:", e); }
         };
         const autoSave = () => saveState();
@@ -766,7 +763,7 @@
                 const savedStateJSON = localStorage.getItem(SAVE_KEY);
                 if (!savedStateJSON) return false;
                 const savedState = JSON.parse(savedStateJSON);
-                if (!savedState.version || savedState.version < '5.4') {
+                if (!savedState.version || savedState.version < '5.5') {
                     localStorage.removeItem(SAVE_KEY);
                     return false;
                 }
@@ -807,7 +804,7 @@
                 else if (target.id === 'finish-button') generateReport();
                 else if (target.id === 'open-knowledge-modal-btn') openKnowledgeModal();
                 else if (target.id === 'back-to-start-btn') showConfirm('지금까지의 진행 상황이 모두 사라집니다. 정말 처음으로 돌아가시겠습니까?', restart, '처음으로 돌아가기');
-                else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까?', () => { const newWindow = window.open('about:blank', '_self'); newWindow.close(); }, '종료');
+                else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까?', () => { window.open('', '_self').close(); }, '종료');
                 else if (target.id === 'restart-btn') showConfirm('정말 모든 진행 상황을 삭제하고 다시 시작하시겠습니까?', restart, '다시 시작하기');
                 else if (target.id === 'open-save-share-modal-btn') openModal(dom.saveShareModalEl);
                 else if (target.id === 'save-image-btn') { closeModal(dom.saveShareModalEl); downloadReport(); }
@@ -826,17 +823,19 @@
                     appData.state.rankedItems[slotIndex] = null;
                     renderRankingSlots();
                     autoSave();
-                } else if (target.id === 'fullscreen-enter-btn') {
-                    document.documentElement.requestFullscreen().catch(e => console.error(e));
-                } else if (target.id === 'fullscreen-exit-btn') {
-                    document.exitFullscreen().catch(e => console.error(e));
+                } else if (target.closest('#fullscreen-toggle')) {
+                     if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(e => console.error(e));
+                    } else {
+                        document.exitFullscreen().catch(e => console.error(e));
+                    }
                 }
             });
 
             document.addEventListener('fullscreenchange', () => {
                 const isFullscreen = !!document.fullscreenElement;
-                dom.fullscreenEnterBtn.classList.toggle('hidden', isFullscreen);
-                dom.fullscreenExitBtn.classList.toggle('hidden', !isFullscreen);
+                dom.fullscreenEnterIcon.classList.toggle('hidden', isFullscreen);
+                dom.fullscreenExitIcon.classList.toggle('hidden', !isFullscreen);
             });
 
             ['groupNameInput', 'studentNameInput', 'studentNumberInput'].forEach(id => {
