@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>달 조난 상황 생존 시뮬레이션</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
@@ -12,39 +12,36 @@
         This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
         You should have received a copy of the license along with this work. If not, see <http://creativecommons.org/licenses/by-nc-sa/4.0/>.
     -->
-    <!-- Chosen Palette: Cosmic Harmony (Deep Blue, Slate Gray, Muted Orange, Cream) -->
-    <!-- Application Structure Plan: A linear, multi-stage single-page application. The flow is: 1. Intro -> 2. Role Selection -> 3. Knowledge Briefing -> 4. Main Ranking Activity -> 5. Final Report & Save. This step-by-step structure is chosen for its simplicity and clarity, making it easy for 5th-grade students to follow without getting overwhelmed. It guides them through a narrative journey, enhancing engagement and ensuring they complete each cognitive step (understanding the scenario, adopting a role, processing information, making decisions) before moving to the next. -->
-    <!-- Visualization & Content Choices: 
-        - Scenario/Roles/Knowledge: Presented as clear, static text on distinct screens to avoid cognitive overload. Roles are visualized with large, friendly Unicode icons on clickable cards for intuitive selection. Knowledge is updated with user-provided content and is viewable on demand via a modal.
-        - 15 Survival Items: Displayed as interactive cards in a "pool". Each card is draggable and clickable. Clicking opens a modal with a very simple, neutral description. The info button remains visible even after ranking. When returned to the pool, the item reverts to its original state.
-        - Priority Ranking: A drag-and-drop list powered by SortableJS provides a tangible, kinesthetic way to rank items. The guiding hint text has been removed as per user request.
-        - Justification: A simple text input appears next to each ranked item, directly linking the action (ranking) to the reason.
-        - Final Report: A static, read-only summary of the student's choices, which can be saved as an image with a custom filename based on group and student name.
-        - Library/Method: Vanilla JS for state and navigation, SortableJS for interaction, html2canvas for output.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
         html, body {
-            overscroll-behavior: none;
+            overscroll-behavior-y: contain;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
         }
         body {
             font-family: 'Noto Sans KR', sans-serif;
-            background-color: #0a192f; /* Deep Navy Blue */
+            background-color: #0a192f;
             color: #e6f1ff;
+        }
+        #app-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
         }
         .screen { display: none; }
         .active-screen { display: block; }
-        .item-card {
-            touch-action: none; /* Recommended for SortableJS */
-        }
         .drag-handle {
             cursor: grab;
             padding: 0.5rem;
-            color: #94a3b8; /* slate-400 */
+            color: #94a3b8;
         }
         .drag-handle:hover {
-            color: #e2e8f0; /* slate-200 */
+            color: #e2e8f0;
         }
         .sortable-ghost {
             background: #4a5568;
@@ -63,6 +60,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0s 0.2s;
+        }
+        .modal-base.show {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.2s ease;
         }
         .modal-content {
             position: relative;
@@ -70,270 +75,409 @@
             padding: 2rem;
             width: 95%;
             max-width: 500px;
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+        .modal-base.show .modal-content {
+            transform: scale(1);
+        }
+        #emergency-screen {
+            background-color: #000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            z-index: 200;
+        }
+        #emergency-message-container p {
+            opacity: 0;
+            animation: fadeIn 1.5s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        .rank-slot.empty {
+            cursor: pointer;
+            border-style: dashed;
+        }
+        .rank-slot.empty:hover {
+            background-color: #334155; /* slate-700 */
         }
     </style>
 </head>
-<body class="w-full min-h-screen flex items-center justify-center p-2 sm:p-4">
+<body class="p-2 sm:p-4">
 
-    <div id="app-container" class="w-full max-w-7xl mx-auto bg-[#172a46] bg-opacity-80 backdrop-blur-sm rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
+    <div id="app-wrapper">
+        <div id="app-container" class="w-full max-w-7xl mx-auto bg-[#172a46] bg-opacity-80 backdrop-blur-sm rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
 
-        <!-- Screen 1: Intro -->
-        <div id="intro-screen" class="screen active-screen text-center">
-            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">달에서 길을 잃다</h1>
-            <p class="text-base sm:text-lg md:text-xl text-slate-300 mb-6 max-w-2xl mx-auto">
-                당신이 탄 우주선이 달에 불시착했습니다.<br>
-                살아남기 위해, 200km 떨어진 구조선까지 가야 합니다.<br>
-                주어진 15개 물품의 생존 우선순위를 정하고, 그 이유를 설명하세요!
-            </p>
-            <div class="max-w-sm mx-auto mb-8 space-y-4">
-                <div>
-                    <label for="groupNameInput" class="block mb-2 text-sm font-medium text-slate-300">모둠명을 입력하세요</label>
-                    <input type="text" id="groupNameInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" placeholder="예) 1모둠" required>
-                </div>
-                <div>
-                    <label for="studentNumberInput" class="block mb-2 text-sm font-medium text-slate-300">번호를 선택하세요</label>
-                    <select id="studentNumberInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" required>
-                        <!-- Options will be populated by JS -->
-                    </select>
-                </div>
-                <div>
-                    <label for="studentNameInput" class="block mb-2 text-sm font-medium text-slate-300">이름을 입력하세요</label>
-                    <input type="text" id="studentNameInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" placeholder="예) 홍길동" required>
-                </div>
-            </div>
-            <button id="start-mission-btn" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-6 sm:px-8 rounded-lg transition-transform transform hover:scale-105">
-                미션 시작
-            </button>
-            <p class="text-xs text-slate-500 mt-8">made by.핑키네</p>
-        </div>
-
-        <!-- Screen 2: Role Selection -->
-        <div id="role-screen" class="screen">
-            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-6">당신의 전문 분야를 선택하세요</h2>
-            <p class="text-center text-slate-300 mb-8">선택한 역할에 따라 특별한 전문 지식을 얻게 됩니다.</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                <div data-role="scientist" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
-                    <div class="text-5xl sm:text-6xl mb-4">🔬</div>
-                    <h3 class="text-xl sm:text-2xl font-bold">우주과학자</h3>
-                    <p class="text-slate-400 text-sm sm:text-base">달의 환경과 물리 법칙에 대해 깊이 이해하고 있습니다.</p>
-                </div>
-                <div data-role="explorer" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
-                    <div class="text-5xl sm:text-6xl mb-4">🧭</div>
-                    <h3 class="text-xl sm:text-2xl font-bold">탐험가</h3>
-                    <p class="text-slate-400 text-sm sm:text-base">험난한 지형을 돌파하고 길을 찾는 데 능숙합니다.</p>
-                </div>
-                <div data-role="communicator" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
-                    <div class="text-5xl sm:text-6xl mb-4">📡</div>
-                    <h3 class="text-xl sm:text-2xl font-bold">통신전문가</h3>
-                    <p class="text-slate-400 text-sm sm:text-base">장비를 활용해 구조 신호를 보내는 방법을 알고 있습니다.</p>
-                </div>
-                <div data-role="medic" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
-                    <div class="text-5xl sm:text-6xl mb-4">🩺</div>
-                    <h3 class="text-xl sm:text-2xl font-bold">의료진</h3>
-                    <p class="text-slate-400 text-sm sm:text-base">극한 상황에서 생명을 유지하는 방법을 알고 있습니다.</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Screen 3: Knowledge Briefing -->
-        <div id="knowledge-screen" class="screen">
-            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-2">전문 지식 브리핑</h2>
-            <p id="role-title" class="text-center text-orange-400 font-bold text-lg mb-6"></p>
-            <div id="knowledge-list" class="bg-slate-800 p-4 sm:p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-300 max-h-[60vh] overflow-y-auto">
-                <!-- Knowledge items will be injected here by JS -->
-            </div>
-            <div class="text-center mt-8">
-                 <button id="go-to-ranking-btn" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
-                    물품 순위 정하기
-                </button>
-            </div>
-        </div>
-
-        <!-- Screen 4: Main Ranking Activity -->
-        <div id="main-screen" class="screen">
-            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                <h2 class="text-2xl sm:text-3xl font-bold text-center flex-grow">생존 물품 우선순위 정하기</h2>
-                <button id="open-knowledge-modal-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex-shrink-0 w-full sm:w-auto">
-                    내 전문지식 보기 🧠
-                </button>
-            </div>
-            <div class="flex flex-col md:flex-row gap-6">
-                <!-- Left: Item Pool -->
-                <div class="w-full md:w-1/3">
-                    <h3 class="font-bold text-xl mb-4 text-center">사용 가능한 물품</h3>
-                    <div id="items-pool" class="bg-slate-800 p-4 rounded-lg min-h-[300px] md:min-h-[60vh] grid grid-cols-1 gap-3 overflow-y-auto">
-                        <!-- Item cards will be injected here by JS -->
-                    </div>
-                </div>
-                <!-- Right: Ranking List -->
-                <div class="w-full md:w-2/3">
-                    <h3 class="font-bold text-xl mb-4 text-center">나의 생존 키트 순위</h3>
-                    <div id="rank-list" class="bg-slate-800 p-4 rounded-lg min-h-[300px] md:min-h-[60vh] space-y-3 overflow-y-auto">
-                       <!-- Ranked items will be dropped here -->
-                    </div>
-                </div>
-            </div>
-             <div class="text-center mt-8">
-                 <button id="finish-button" class="bg-green-600 hover:bg-green-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>
-                    결과 보고서 만들기
-                </button>
-            </div>
-        </div>
-        
-        <!-- Screen 5: Final Report -->
-        <div id="report-screen" class="screen">
-             <div id="report-content" class="p-2">
-                <h2 class="text-2xl sm:text-3xl font-bold text-center mb-4">나의 최종 생존 전략</h2>
-                <p class="text-center text-slate-300 mb-8">
-                    모둠: <span id="final-group-name" class="font-bold text-cyan-400"></span> / 
-                    <span id="final-student-number" class="font-bold text-cyan-400"></span>번 
-                    <span id="final-student-name" class="font-bold text-cyan-400"></span> / 
-                    전문 분야: <span id="final-role" class="font-bold text-orange-400"></span>
+            <!-- Screen 1: Intro -->
+            <div id="intro-screen" class="screen active-screen text-center">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">달에서 길을 잃다</h1>
+                <p class="text-base sm:text-lg md:text-xl text-slate-300 mb-6 max-w-2xl mx-auto">
+                    당신이 탄 우주선이 달에 불시착했습니다.<br>
+                    살아남기 위해, 약 300km 떨어진 구조선까지 가야 합니다.<br>
+                    주어진 15개 물품의 생존 우선순위를 정하고, 그 이유를 설명하세요!
                 </p>
-                <div id="final-list" class="space-y-3 bg-slate-800 p-4 sm:p-6 rounded-lg">
-                    <!-- Final report will be generated here -->
+                <div class="max-w-sm mx-auto mb-8 space-y-4">
+                    <div>
+                        <label for="groupNameInput" class="block mb-2 text-sm font-medium text-slate-300">소속을 입력하세요</label>
+                        <input type="text" id="groupNameInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" placeholder="예) 2모둠, 3반, 핑키초등학교" required>
+                    </div>
+                    <div>
+                        <label for="studentNumberInput" class="block mb-2 text-sm font-medium text-slate-300">번호를 선택하세요</label>
+                        <select id="studentNumberInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" required>
+                            <!-- Options will be populated by JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="studentNameInput" class="block mb-2 text-sm font-medium text-slate-300">이름을 입력하세요</label>
+                        <input type="text" id="studentNameInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" placeholder="예) 홍길동" required>
+                    </div>
+                </div>
+                <button id="start-mission-btn" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-6 sm:px-8 rounded-lg transition-transform transform hover:scale-105">
+                    미션 시작
+                </button>
+                <p class="text-xs text-slate-500 mt-8">made by.핑키네</p>
+            </div>
+            
+            <!-- Screen 2: Role Selection -->
+            <div id="role-screen" class="screen">
+                <h2 class="text-2xl sm:text-3xl font-bold text-center mb-6">당신의 전문 분야를 선택하세요</h2>
+                <p class="text-center text-slate-300 mb-8">선택한 역할에 따라 특별한 전문 지식을 얻게 됩니다.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                    <div data-role="scientist" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
+                        <div class="text-5xl sm:text-6xl mb-4">🔬</div>
+                        <h3 class="text-xl sm:text-2xl font-bold">우주과학자</h3>
+                        <p class="text-slate-400 text-sm sm:text-base">달의 환경과 물리 법칙에 대해 깊이 이해하고 있습니다.</p>
+                    </div>
+                    <div data-role="explorer" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
+                        <div class="text-5xl sm:text-6xl mb-4">🧭</div>
+                        <h3 class="text-xl sm:text-2xl font-bold">탐험가</h3>
+                        <p class="text-slate-400 text-sm sm:text-base">험난한 지형을 돌파하고 길을 찾는 데 능숙합니다.</p>
+                    </div>
+                    <div data-role="communicator" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
+                        <div class="text-5xl sm:text-6xl mb-4">📡</div>
+                        <h3 class="text-xl sm:text-2xl font-bold">통신전문가</h3>
+                        <p class="text-slate-400 text-sm sm:text-base">장비를 활용해 구조 신호를 보내는 방법을 알고 있습니다.</p>
+                    </div>
+                    <div data-role="medic" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
+                        <div class="text-5xl sm:text-6xl mb-4">🩺</div>
+                        <h3 class="text-xl sm:text-2xl font-bold">의료진</h3>
+                        <p class="text-slate-400 text-sm sm:text-base">극한 상황에서 생명을 유지하는 방법을 알고 있습니다.</p>
+                    </div>
                 </div>
             </div>
-            <div class="text-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
-                <button id="download-report-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
-                    결과 이미지로 저장하기
-                </button>
-                 <button id="restart-btn" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
-                    다시하기
-                </button>
+            
+            <!-- Screen 3: Knowledge Briefing -->
+            <div id="knowledge-screen" class="screen">
+                <h2 class="text-2xl sm:text-3xl font-bold text-center mb-2">전문 지식 브리핑</h2>
+                <p id="role-title" class="text-center text-orange-400 font-bold text-lg mb-6"></p>
+                <div id="knowledge-list" class="bg-slate-800 p-4 sm:p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-300 max-h-[60vh] overflow-y-auto">
+                    <!-- Knowledge items will be injected here by JS -->
+                </div>
+                <div class="text-center mt-8">
+                    <button id="go-to-ranking-btn" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                        물품 순위 정하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- Screen 4: Main Ranking Activity -->
+            <div id="main-screen" class="screen">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-center flex-grow">생존 물품 우선순위 정하기</h2>
+                    <button id="open-knowledge-modal-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex-shrink-0 w-full sm:w-auto">
+                        내 전문지식 보기 🧠
+                    </button>
+                </div>
+                <div id="rank-list" class="w-full bg-slate-800 p-4 rounded-lg min-h-[60vh] space-y-3 max-h-[65vh] overflow-y-auto">
+                   <!-- Ranking slots will be generated here -->
+                </div>
+                 <div class="text-center mt-8">
+                     <button id="finish-button" class="bg-green-600 hover:bg-green-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>
+                         결과 보고서 만들기 <span id="finish-button-counter">(0/15)</span>
+                     </button>
+                </div>
+            </div>
+            
+            <!-- Screen 5: Final Report -->
+            <div id="report-screen" class="screen">
+                 <div id="report-content" class="p-2">
+                     <h2 class="text-2xl sm:text-3xl font-bold text-center mb-4">나의 달 생존 보고서</h2>
+                     <p class="text-center text-slate-300 mb-8">
+                         소속: <span id="final-group-name" class="font-bold text-cyan-400"></span> / 
+                         <span id="final-student-number" class="font-bold text-cyan-400"></span>번 
+                         <span id="final-student-name" class="font-bold text-cyan-400"></span> / 
+                         전문 분야: <span id="final-role" class="font-bold text-orange-400"></span>
+                     </p>
+                     <div id="score-summary" class="text-center mb-6 bg-slate-900/50 p-4 rounded-lg">
+                        <!-- Score and evaluation will be injected here -->
+                     </div>
+                     <div id="final-list" class="space-y-3 bg-slate-800 p-4 sm:p-6 rounded-lg max-h-[55vh] overflow-y-auto">
+                         <!-- Final report will be generated here -->
+                     </div>
+                 </div>
+                <div class="text-center mt-8 space-x-4">
+                    <button id="open-save-share-modal-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                        결과 저장하기
+                    </button>
+                     <a href="https://pinkylucky.tistory.com/2" target="_blank" rel="noopener noreferrer" class="inline-block bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition">
+                        NASA 전문가 해설
+                    </a>
+                     <button id="restart-btn" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                        다시하기
+                    </button>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- Item Modal -->
-    <div id="item-modal" class="modal-base hidden">
+    <!-- Screen 1.5: Emergency Sequence -->
+    <div id="emergency-screen" class="flex flex-col items-center justify-center p-8">
+        <div id="emergency-message-container" class="text-white text-xl sm:text-2xl md:text-3xl font-bold text-center space-y-6">
+            <!-- Messages will be injected here -->
+        </div>
+        <button id="skip-emergency-btn" class="absolute top-5 right-5 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg z-10">SKIP</button>
+        <button id="proceed-to-roles-btn" class="mt-8 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-lg hidden transition-opacity animate-pulse">
+            전문 분야 선택하기
+        </button>
+    </div>
+
+    <!-- Modals and Global Buttons -->
+    <div id="global-buttons" class="fixed bottom-5 left-5 right-5 flex justify-between items-center z-50 pointer-events-none">
+        <button id="back-to-start-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto">처음으로</button>
+        <button id="exit-app-btn" class="bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto ml-auto">종료</button>
+    </div>
+    
+    <!-- Item Info Modal -->
+    <div id="item-info-modal" class="modal-base">
         <div class="modal-content bg-slate-800 rounded-lg border border-slate-600">
-            <span id="close-item-modal-btn" class="absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
-            <div id="modal-body" class="text-white">
-                <!-- Modal content will be injected here -->
-            </div>
+            <span class="close-modal-btn absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
+            <div id="item-info-modal-body" class="text-white"></div>
         </div>
     </div>
     
+    <!-- Item Selection Modal -->
+    <div id="item-selection-modal" class="modal-base">
+        <div class="modal-content bg-slate-800 rounded-lg border border-slate-600">
+             <span class="close-modal-btn absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
+            <h3 class="text-2xl font-bold mb-4 text-center text-cyan-400">사용 가능한 물품 선택</h3>
+            <div id="item-selection-modal-body" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto p-2"></div>
+        </div>
+    </div>
+
+    <!-- Save/Share Modal -->
+    <div id="save-share-modal" class="modal-base">
+        <div class="modal-content bg-slate-800 rounded-lg border border-slate-600 text-center">
+            <span class="close-modal-btn absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
+            <h3 class="text-2xl font-bold mb-6 text-cyan-400">결과 저장 및 공유</h3>
+            <div class="flex flex-col gap-4">
+                <button id="save-image-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all">🖼️ 이미지로 저장</button>
+                <button id="share-image-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-all">🔗 공유하기</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Knowledge Modal -->
-    <div id="knowledge-modal" class="modal-base hidden">
+    <div id="knowledge-modal" class="modal-base">
         <div class="modal-content bg-slate-800 rounded-lg border border-slate-600">
-            <span id="close-knowledge-modal-btn" class="absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
-            <div id="knowledge-modal-body" class="text-white">
-                <!-- Knowledge modal content will be injected here -->
-            </div>
+            <span class="close-modal-btn absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
+            <div id="knowledge-modal-body" class="text-white"></div>
         </div>
     </div>
 
     <!-- Resume Modal -->
-    <div id="resume-modal" class="modal-base hidden">
-        <div class="modal-content bg-slate-800 rounded-lg border border-slate-600 text-center">
-            <h3 class="text-2xl font-bold mb-4">저장된 내용 발견!</h3>
-            <p class="mb-6 text-slate-300">이어서 계속하시겠습니까?</p>
-            <div class="flex justify-center gap-4">
-                <button id="resume-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">이어하기</button>
-                <button id="start-new-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">새로 시작</button>
+    <div id="resume-modal" class="modal-base">
+        <div class="modal-content bg-slate-800 rounded-lg border border-slate-600 text-center max-w-md">
+            <div class="mb-4">
+                <div class="text-4xl mb-2">🚀</div>
+                <h3 class="text-2xl font-bold mb-2 text-cyan-400">이어서 하기</h3>
+                <div id="resume-info" class="text-slate-300 text-sm space-y-1 mb-4"></div>
+                <p class="text-slate-400 text-sm">저장된 진행 상황을 발견했습니다!</p>
+            </div>
+            <div class="flex flex-col gap-3">
+                <button id="resume-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105">🔄 이어서 계속하기</button>
+                <button id="start-new-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-all">🆕 새로 시작하기</button>
             </div>
         </div>
     </div>
 
+    <!-- General Alert/Confirm Modal -->
+    <div id="alert-confirm-modal" class="modal-base">
+        <div class="modal-content bg-slate-800 rounded-lg border border-slate-600 text-center max-w-md">
+            <h3 id="alert-confirm-title" class="text-xl font-bold mb-4 text-yellow-300"></h3>
+            <p id="alert-confirm-message" class="text-slate-300 mb-6"></p>
+            <div id="alert-confirm-buttons" class="flex justify-center gap-4"></div>
+        </div>
+    </div>
 
     <script>
     (function() {
+        let emergencySequenceTimeoutId = null; 
         const appData = {
+            emergencyMessages: [
+                "치직... 치지직...", "여기는 통제실, 응답하라 아르테미스 1호!", "알 수 없는 충격으로 선체 손상 확인.",
+                "현재 위치를 특정할 수 없음.", "대원, 당신의 판단에 모두의 생존이 달려있다.", "구조선까지는 약 300km.",
+                "전문지식을 활용해, 15개 비상 물품의 생존 순위를 정해라.", "반드시... 반드시 살아남아라!"
+            ],
             roles: {
-                scientist: {
-                    name: '우주과학자',
-                    knowledge: [
-                        "달에는 공기(산소)가 전혀 없어요", "달에서 불은 탈 수 없어요 (산소가 없으니까)", "낮에는 120도, 밤에는 -170도예요", "달에는 자기장이 없어서 방사선이 많이 들어와요", "달에서는 중력이 약해서 높이 뛸 수 있어요", "물은 진공 상태에서 끓어요", "우주복에는 이미 온도 조절 기능이 있어요", "우주복 안의 산소는 보통 6-8시간 정도 쓸 수 있어요", "우주인들은 보통 기저귀를 입고 우주복을 입어요", "달의 지름은 3,474km예요", "달은 지구에서 38만km 떨어져 있어요", "달은 약 45억년 전에 만들어졌어요", "달에는 토끼가 살고 있다는 전설이 있어요", "달의 바다는 실제로는 물이 없는 평원이에요", "달에는 산소가 없다는 사실이 어떤 물품에 영향을 줄까요?", "극한의 온도 환경에서 필요한 것은 무엇일까요?", "우주복의 기능을 생각하면 어떤 물품이 중복될까요?"
-                    ]
-                },
-                explorer: {
-                    name: '탐험가',
-                    knowledge: [
-                        "달에는 지구처럼 자기장이 없어서 나침반이 작동 안 해요", "밤하늘의 별을 보고 방향을 찾을 수 있어요", "달에서는 소리가 들리지 않아요 (공기가 없어서)", "200km는 아주 먼 거리예요 (서울에서 대전 정도)", "높은 곳에서 떨어져도 천천히 떨어져요", "끈이나 로프는 여러 용도로 쓸 수 있어요", "길을 잃었을 때는 한 곳에 머물러야 한다고 배웠어요", "응급상황에서는 밝은 색깔 옷이 좋아요", "야외에서는 호루라기로 도움을 요청해요", "산에서는 해가 지면 급격히 추워져요", "지구에서 산을 오를 때는 항상 물을 많이 가져가요", "등산할 때는 따뜻한 옷을 입어야 해요", "숲에서는 이끼가 있는 쪽이 북쪽이에요", "캠핑할 때는 텐트를 바람 반대쪽에 쳐야 해요", "달에서의 길찾기는 지구와 어떻게 다를까요?", "200km라는 긴 거리를 이동하려면 무엇이 필요할까요?", "지구에서의 탐험 상식이 달에서도 통할까요?"
-                    ]
-                },
-                communicator: {
-                    name: '통신전문가',
-                    knowledge: [
-                        "태양열로 충전되는 장비는 낮에만 충전돼요", "무전기는 배터리가 떨어지면 쓸 수 없어요", "달에서는 전파가 지구보다 잘 전달돼요 (방해물이 없어서)", "밝은 신호는 멀리서도 볼 수 있어요", "조명탄은 진공에서도 탈 수 있게 만들어졌어요", "응급신호는 3번씩 반복해야 해요", "구조대가 오고 있는지는 모르겠어요", "보트에는 풍선처럼 압축가스가 가득 들어 있어요", "금속은 전기를 잘 통해요", "휴대폰은 보통 하루 정도 배터리가 지속돼요", "WiFi는 벽을 통과하기 어려워요", "라디오는 AM과 FM 두 종류가 있어요", "비가 올 때는 전자기기를 조심해야 해요", "블루투스는 10m 정도까지 연결돼요", "달에서 구조받으려면 어떤 방법이 가장 좋을까요?", "배터리와 전력 공급은 어떻게 해결할까요?", "지구에서 쓰던 통신 방법이 달에서도 통할까요?"
-                    ]
-                },
-                medic: {
-                    name: '의료진',
-                    knowledge: [
-                        "우주복이 찢어지면 매우 위험해요", "작은 상처도 달에서는 감염될 수 있어요", "총이나 조명탄은 다칠 위험이 있어요", "응급처치할 때는 환자를 따뜻하게 해줘야 해요", "몸의 체온과 수분을 유지하는 것이 중요해요", "탈수되면 판단력이 떨어져요", "영양 상태가 나쁘면 체력이 떨어져요", "스트레스받으면 실수를 많이 해요", "분유는 영양가가 있지만 물에 타서 먹어야 해요", "하루에 물을 8잔 정도 마셔야 건강해요", "감기에 걸리면 따뜻하게 해야 해요", "운동 전에는 스트레칭을 해야 해요", "손을 자주 씻어야 세균을 막을 수 있어요", "비타민C는 감기 예방에 좋아요", "달에서 건강을 지키려면 무엇이 가장 중요할까요?", "응급상황이 생겼을 때 어떻게 대처해야 할까요?", "지구에서의 건강 상식이 달에서도 적용될까요?"
-                    ]
-                },
+                scientist: { name: '우주과학자', knowledge: [ { text: "연소(타는 것)는 산소와 같은 산화제가 반드시 필요해요." }, { text: "액체의 끓는점은 주변의 기압에 따라 달라져요." }, { text: "달에는 공기가 없어 호흡이 불가능하며, 대기압이 거의 0에 가까워요." }, { text: "우주복에는 자체적인 생명 유지(산소 공급, 온도 조절) 기능이 있어요." }, { text: "달의 먼지는 매우 곱고 날카로워서, 기계 장치에 고장을 일으킬 수 있어요." }, { text: "우주선의 금속 파편은 햇빛을 반사시켜 멀리서도 보일 수 있어요." }, { text: "달 표면의 온도는 낮에는 120도, 밤에는 -170도까지 변해요." }, { text: "달의 '고요의 바다'는 아폴로 11호가 착륙한 곳으로 유명해요." }, { text: "지구와 달 사이의 평균 거리는 약 384,400km예요." }, { text: "달의 가장 큰 크레이터(충돌 구덩이)는 남극-에이트켄 분지예요." } ] },
+                explorer: { name: '탐험가', knowledge: [ { text: "지구에서 본 별자리들은 달에서도 보여요. 별자리들은 지구와 달에서 아주아주 멀어요." }, { text: "자기장(Magnetic Field)은 행성의 남극과 북극을 연결하는 거대한 자석과 같아요." }, { text: "달에는 지구와 같은 자기장이 없어요." }, { text: "300km는 서울에서 부산까지의 거리와 비슷하며, 걸어서 가기엔 매우 먼 여정이에요." }, { text: "햇빛이 비치는 동안, 그림자의 방향과 길이를 이용해 대략적인 시간을 파악할 수 있어요." }, { text: "나일론 끈은 무게에 비해 매우 강한 인장 강도로 알려져 있어요." }, { text: "달 표면은 날카로운 암석과 먼지로 덮여 있어 신발이나 장비가 쉽게 손상될 수 있어요." }, { text: "달에는 대기가 없어 하늘이 항상 검은색이에요." }, { text: "달에서 처음으로 골프를 친 우주비행사가 있어요." }, { text: "달 탐사 로버 '바이퍼(VIPER)'는 달의 남극에서 얼음을 찾는 임무를 수행할 예정이에요." } ] },
+                communicator: { name: '통신전문가', knowledge: [ { text: "FM 전파는 장애물을 통과하지 못하고 직진하는 성질이 강해요." }, { text: "압축된 가스를 방출하면, 뉴턴의 제3법칙(작용-반작용)에 따라 반대 방향으로 힘이 생겨요." }, { text: "빛은 진공 속에서도 전달되며, 반짝이는 물체는 멀리서도 식별하기 쉬워요." }, { text: "소리는 공기 같은 매질이 있어야 전달될 수 있어요." }, { text: "모스 부호(SOS: ··· — — — ···)는 간단한 신호로 구조 요청을 보낼 수 있는 국제 표준이에요." }, { text: "태양열 충전기는 해가 떠 있는 동안에만 작동해요." }, { text: "최초의 인공위성은 소련의 '스푸트니크 1호'였어요." }, { text: "화성탐사선 '큐리오시티'는 착륙할 때 스카이크레인이라는 독특한 방법을 사용했어요." }, { text: "아폴로 계획에 사용된 컴퓨터의 처리 능력은 현대의 스마트폰보다 훨씬 낮았어요." }, { text: "보이저 탐사선에는 지구의 소리와 그림을 담은 '골든 레코드'가 실려 있어요." } ] },
+                medic: { name: '의료진', knowledge: [ { text: "NASA 우주복에는 수트의 기밀성을 해치지 않으면서 약물을 투여할 수 있는 특수 주입구가 있어요." }, { text: "인간은 물 없이는 3일 이상 생존하기 어려워요." }, { text: "탈수 현상은 방향감각 상실과 혼란을 유발할 수 있어요." }, { text: "우주 공간의 강한 방사선은 인체에 해로우므로, 가능한 한 몸을 가리는 것이 좋아요." }, { text: "음식 농축액은 맛은 없지만, 작은 양으로도 높은 칼로리를 제공해요." }, { text: "분말 형태의 식품은 섭취를 위해 액체가 필요한 경우가 많아요." }, { text: "상처가 외부 환경에 직접 노출되면 감염의 위험이 커져요." }, { text: "저체온증은 신체 기능 저하의 주요 원인 중 하나예요." }, { text: "우주비행사들은 우주에서 키가 일시적으로 약간 커진다고 해요." }, { text: "무중력 상태에서는 근육과 뼈가 약해지는 것을 막기 위해 매일 2시간씩 운동해야 해요." } ] }
             },
             items: [
-                { id: 1, name: '산소통 45kg (2정)', icon: '💨', description: '호흡에 필요한 산소가 압축되어 들어있는 금속 용기 2개입니다.' },
-                { id: 2, name: '물 (2L)', icon: '💧', description: '마실 수 있는 깨끗한 물이 담긴 통입니다.' },
-                { id: 3, name: '달에서 본 별자리 지도', icon: '🗺️', description: '달의 북반구에서 보이는 별들의 위치를 표시한 천체 지도입니다.' },
-                { id: 4, name: '음식 (우주식)', icon: '🍔', description: '물 없이 바로 섭취할 수 있도록 농축된 비상 식량입니다.' },
-                { id: 5, name: '태양열 충전식 FM 무전기', icon: '📻', description: '태양 빛으로 충전하여 단거리 주파수 변조(FM) 방식으로 통신하는 기기입니다.' },
-                { id: 6, name: '15m 길이의 나일론 끈', icon: '🧶', description: '길고 튼튼한 나일론 소재의 끈입니다.' },
-                { id: 7, name: '구급 상자', icon: '🩹', description: '소독약, 붕대, 의료용 테이프 등이 들어있는 상자입니다.' },
-                { id: 8, name: '낙하산 천', icon: '🪂', description: '공기 저항을 이용하기 위한 크고 질긴 천입니다.' },
-                { id: 9, name: '구명 고무보트', icon: '🚤', description: '물 위에서 사용하는 고무 재질의 보트이며, 이산화탄소 가스통으로 부풀립니다.' },
-                { id: 10, name: '신호용 조명탄', icon: '🧨', description: '먼 곳에 신호를 보내기 위해 밝은 빛을 내며 타는 폭죽입니다.' },
-                { id: 11, name: '45구경 권총', icon: '🔫', description: '총알을 발사하는 개인용 화기입니다.' },
-                { id: 12, name: '휴대용 난방기', icon: '🔥', description: '주변을 따뜻하게 데우는 휴대용 기기입니다.' },
-                { id: 13, name: '분유 한 상자', icon: '🍼', description: '아기에게 영양을 공급하기 위한 분말 형태의 우유입니다.' },
-                { id: 14, name: '자석 나침반', icon: '🧭', description: '지구의 자기장을 이용하여 방향을 가리키는 도구입니다.' },
-                { id: 15, name: '성냥이 들어있는 상자', icon: '📦', description: '마찰을 통해 불을 붙이는 도구인 성냥이 들어있는 상자입니다.' },
+                { id: 15, name: '성냥이 들어있는 상자', nasaRank: 15, icon: '📦', description: '마찰을 통해 불을 붙이는 도구인 성냥이 들어있는 상자입니다.' },
+                { id: 6, name: '15m 길이의 나일론 끈', nasaRank: 6, icon: '🧶', description: '길고 튼튼한 나일론 소재의 끈입니다.' },
+                { id: 2, name: '물 (20L)', nasaRank: 2, icon: '💧', description: '마실 수 있는 깨끗한 물이 20리터 담긴 통입니다.' },
+                { id: 10, name: '신호용 조명탄', nasaRank: 10, icon: '🧨', description: '내장된 산화제 덕분에 산소 없이도 타면서 밝은 빛을 내는 신호용 폭죽입니다. (산화제: 다른 물질이 잘 타도록 돕는 물질)' },
+                { id: 8, name: '낙하산 천', nasaRank: 8, icon: '🪂', description: '공기 저항을 이용하기 위한 크고 질긴 천입니다.' },
+                { id: 1, name: '산소통 45kg (2정)', nasaRank: 1, icon: '💨', description: '호흡에 필요한 산소가 압축되어 들어있는 금속 용기 2개입니다.' },
+                { id: 13, name: '분유 한 상자', nasaRank: 12, icon: '🍼', description: '아기에게 영양을 공급하기 위한 분말 형태의 우유입니다.' },
+                { id: 5, name: '태양열 충전식 FM 무전기', nasaRank: 5, icon: '📻', description: '태양 빛으로 충전하여 단거리 주파수 변조(FM) 방식으로 통신하는 기기입니다.' },
+                { id: 12, name: '휴대용 난방기', nasaRank: 13, icon: '🔥', description: '주변을 따뜻하게 데우는 휴대용 기기입니다.' },
+                { id: 3, name: '별자리 지도', nasaRank: 3, icon: '🗺️', description: '지구 북반구에서 보이는 별들의 위치를 표시한 천체 지도입니다.' },
+                { id: 11, name: '45구경 권총 2정', nasaRank: 11, icon: '🔫', description: '총알을 발사하는 개인용 화기 2정입니다.' },
+                { id: 7, name: '구급 상자 (주사기 포함)', nasaRank: 7, icon: '🩹', description: '소독약, 붕대, 의료용 테이프, 주사기 등이 들어있는 상자입니다.' },
+                { id: 4, name: '음식 (우주식)', nasaRank: 4, icon: '🍔', description: '물 없이 바로 섭취할 수 있도록 농축된 비상 식량입니다.' },
+                { id: 14, name: '자석 나침반', nasaRank: 14, icon: '🧭', description: '지구의 자기장을 이용하여 방향을 가리키는 도구입니다.' },
+                { id: 9, name: '구명 고무보트', nasaRank: 9, icon: '🚤', description: '물 위에서 사용하는 고무 재질의 보트이며, 이산화탄소 가스통으로 부풀립니다.' }
             ],
-            state: {
-                currentScreen: 'intro-screen',
-                groupName: null,
-                studentName: null,
-                studentNumber: null,
-                selectedRole: null,
-            }
+            state: {}
         };
 
         const dom = {
             appContainer: document.getElementById('app-container'),
-            itemsPoolEl: document.getElementById('items-pool'),
             rankListEl: document.getElementById('rank-list'),
-            modalEl: document.getElementById('item-modal'),
-            modalBodyEl: document.getElementById('modal-body'),
+            itemInfoModalEl: document.getElementById('item-info-modal'),
+            itemInfoModalBodyEl: document.getElementById('item-info-modal-body'),
+            itemSelectionModalEl: document.getElementById('item-selection-modal'),
+            itemSelectionModalBodyEl: document.getElementById('item-selection-modal-body'),
+            saveShareModalEl: document.getElementById('save-share-modal'),
             knowledgeModalEl: document.getElementById('knowledge-modal'),
             knowledgeModalBodyEl: document.getElementById('knowledge-modal-body'),
             resumeModalEl: document.getElementById('resume-modal'),
+            alertConfirmModalEl: document.getElementById('alert-confirm-modal'),
+            alertConfirmTitle: document.getElementById('alert-confirm-title'),
+            alertConfirmMessage: document.getElementById('alert-confirm-message'),
+            alertConfirmButtons: document.getElementById('alert-confirm-buttons'),
+            emergencyScreen: document.getElementById('emergency-screen'),
+            emergencyMessageContainer: document.getElementById('emergency-message-container'),
+            proceedToRolesBtn: document.getElementById('proceed-to-roles-btn'),
+            skipEmergencyBtn: document.getElementById('skip-emergency-btn'),
             groupNameInput: document.getElementById('groupNameInput'),
             studentNumberInput: document.getElementById('studentNumberInput'),
             studentNameInput: document.getElementById('studentNameInput'),
             roleTitle: document.getElementById('role-title'),
             knowledgeList: document.getElementById('knowledge-list'),
             finishButton: document.getElementById('finish-button'),
+            finishButtonCounter: document.getElementById('finish-button-counter'),
             finalGroupName: document.getElementById('final-group-name'),
             finalStudentNumber: document.getElementById('final-student-number'),
             finalStudentName: document.getElementById('final-student-name'),
             finalRole: document.getElementById('final-role'),
+            scoreSummary: document.getElementById('score-summary'),
             finalList: document.getElementById('final-list'),
+            backToStartBtn: document.getElementById('back-to-start-btn'),
+            exitAppBtn: document.getElementById('exit-app-btn'),
         };
 
-        const SAVE_KEY = 'pinky-moon-survival-save';
+        const SAVE_KEY = 'pinky-moon-survival-save-v5.3';
+        
+        const resetState = () => {
+             appData.state = {
+                currentScreen: 'intro-screen', groupName: '', studentName: '', studentNumber: '', selectedRole: null,
+                rankedItems: Array(15).fill(null),
+            };
+        };
+
+        const openModal = (modalEl) => modalEl.classList.add('show');
+        const closeModal = (modalEl) => modalEl.classList.remove('show');
+
+        const showAlert = (message, title = '알림') => {
+            dom.alertConfirmTitle.textContent = title;
+            dom.alertConfirmMessage.textContent = message;
+            dom.alertConfirmButtons.innerHTML = `<button class="modal-ok-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">확인</button>`;
+            openModal(dom.alertConfirmModalEl);
+        };
+
+        const showConfirm = (message, onConfirm, title = '확인') => {
+            dom.alertConfirmTitle.textContent = title;
+            dom.alertConfirmMessage.textContent = message;
+            dom.alertConfirmButtons.innerHTML = `
+                <button class="modal-cancel-btn bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">취소</button>
+                <button class="modal-ok-btn bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">확인</button>
+            `;
+            openModal(dom.alertConfirmModalEl);
+            dom.alertConfirmModalEl.querySelector('.modal-ok-btn').onclick = () => { closeModal(dom.alertConfirmModalEl); onConfirm(); };
+        };
+        
+        const showEmergencySequence = () => {
+            showScreen('emergency-screen');
+            dom.emergencyMessageContainer.innerHTML = '';
+            dom.proceedToRolesBtn.classList.add('hidden');
+            dom.skipEmergencyBtn.classList.remove('hidden');
+
+            let messageIndex = 0;
+            const showNextMessage = () => {
+                if (emergencySequenceTimeoutId) clearTimeout(emergencySequenceTimeoutId);
+                if (messageIndex >= appData.emergencyMessages.length) {
+                    dom.skipEmergencyBtn.classList.add('hidden');
+                    dom.proceedToRolesBtn.classList.remove('hidden');
+                    return;
+                }
+                const p = document.createElement('p');
+                p.textContent = appData.emergencyMessages[messageIndex];
+                dom.emergencyMessageContainer.appendChild(p);
+                messageIndex++;
+                emergencySequenceTimeoutId = setTimeout(showNextMessage, 2200);
+            };
+            showNextMessage();
+        };
+        
+        const skipEmergencySequence = () => {
+            if (emergencySequenceTimeoutId) clearTimeout(emergencySequenceTimeoutId);
+            dom.emergencyMessageContainer.innerHTML = appData.emergencyMessages
+                .map(msg => `<p style="animation: none; opacity: 1;">${msg}</p>`).join('');
+            dom.skipEmergencyBtn.classList.add('hidden');
+            dom.proceedToRolesBtn.classList.remove('hidden');
+        };
 
         const showScreen = (screenId) => {
-            document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active-screen'));
-            document.getElementById(screenId).classList.add('active-screen');
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            dom.emergencyScreen.style.display = 'none';
+
+            const activeScreen = document.getElementById(screenId);
+            if (screenId === 'emergency-screen') {
+                dom.emergencyScreen.style.display = 'flex';
+                dom.backToStartBtn.classList.add('hidden');
+                dom.exitAppBtn.classList.add('hidden');
+            } else {
+                activeScreen.classList.add('active-screen');
+                if (screenId === 'intro-screen') {
+                    dom.backToStartBtn.classList.add('hidden');
+                    dom.exitAppBtn.classList.add('hidden');
+                } else {
+                    dom.backToStartBtn.classList.remove('hidden');
+                    dom.exitAppBtn.classList.remove('hidden');
+                }
+            }
             appData.state.currentScreen = screenId;
-            saveState();
+            if (screenId !== 'intro-screen' && screenId !== 'emergency-screen') autoSave();
         };
 
         const startMission = () => {
             appData.state.groupName = dom.groupNameInput.value.trim();
             appData.state.studentName = dom.studentNameInput.value.trim();
             appData.state.studentNumber = dom.studentNumberInput.value;
-            
             if (!appData.state.groupName || !appData.state.studentName || !appData.state.studentNumber) {
-                alert('모둠명, 번호, 이름을 모두 입력(선택)해주세요!');
+                showAlert('소속, 번호, 이름을 모두 입력(선택)해주세요!');
                 return;
             }
-            showScreen('role-screen');
+            saveState();
+            showEmergencySequence();
         };
 
         const selectRole = (roleId, changeScreen = true) => {
@@ -350,7 +494,7 @@
             role.knowledge.forEach(fact => {
                 const li = document.createElement('div');
                 li.className = "bg-slate-700 p-3 rounded";
-                li.textContent = `- ${fact}`;
+                li.textContent = `- ${fact.text}`;
                 dom.knowledgeList.appendChild(li);
             });
 
@@ -370,44 +514,111 @@
                 dom.knowledgeList.appendChild(itemInfoEl);
             });
 
-            if (changeScreen) {
-                showScreen('knowledge-screen');
-            }
+            if (changeScreen) showScreen('knowledge-screen');
+            else autoSave();
         };
         
-        const createPoolItemHTML = (item) => {
-            return `
-                <span class="drag-handle">⠿</span>
-                <span class="flex-1 min-w-0 pointer-events-none">${item.icon} ${item.name}</span>
-                <button data-info-id="${item.id}" class="ml-auto text-xs bg-sky-600 hover:bg-sky-500 text-white py-1 px-2 rounded flex-shrink-0">정보</button>
-            `;
+        const updateFinishButtonState = () => {
+            const itemCount = appData.state.rankedItems.filter(item => item !== null).length;
+            dom.finishButtonCounter.textContent = `(${itemCount}/15)`;
+            dom.finishButton.disabled = (itemCount !== 15);
         };
+        
+        const renderRankingSlots = () => {
+            dom.rankListEl.innerHTML = '';
+            appData.state.rankedItems.forEach((itemData, index) => {
+                const slotEl = document.createElement('div');
+                slotEl.dataset.slotIndex = index;
 
-        const initializeItems = () => {
-            dom.itemsPoolEl.innerHTML = '';
-            appData.items.forEach(item => {
-                const itemEl = document.createElement('div');
-                itemEl.dataset.id = item.id;
-                itemEl.className = 'item-card bg-slate-700 p-2 rounded-md flex items-center gap-2';
-                itemEl.innerHTML = createPoolItemHTML(item);
-                dom.itemsPoolEl.appendChild(itemEl);
+                if (itemData) {
+                    const item = appData.items.find(i => i.id === itemData.id);
+                    slotEl.className = 'rank-slot filled bg-slate-700 p-3 rounded-md';
+                    slotEl.dataset.itemId = item.id;
+                    slotEl.innerHTML = `
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="drag-handle">⠿</span>
+                            <div class="flex-1 min-w-0 font-bold text-lg text-orange-400 flex items-center pointer-events-none">
+                                <span class="rank-number mr-2">${index + 1}위.</span>
+                                <span>${item.icon} ${item.name}</span>
+                            </div>
+                            <button data-info-id="${item.id}" class="text-xs bg-sky-600 hover:bg-sky-500 text-white py-1 px-2 rounded ml-auto flex-shrink-0">정보</button>
+                            <button data-clear-slot="${index}" class="text-xs bg-red-600 hover:bg-red-500 text-white py-1 px-2 rounded flex-shrink-0">X</button>
+                        </div>
+                        <textarea data-reason-for-item="${item.id}" class="w-full bg-slate-900 text-white rounded p-2 text-sm" rows="2" placeholder="이 물품을 이 순위로 정한 이유는...">${itemData.reason || ''}</textarea>
+                    `;
+                } else {
+                    slotEl.className = 'rank-slot empty bg-slate-900/50 p-3 rounded-md border-2 border-slate-700 flex items-center justify-center h-24 transition';
+                    slotEl.innerHTML = `<div class="text-center text-slate-500"><span class="font-bold text-xl">${index + 1}위</span><p class="text-sm">클릭하여 물품 선택</p></div>`;
+                }
+                dom.rankListEl.appendChild(slotEl);
             });
-            checkFinishButton();
+            updateFinishButtonState();
         };
         
-        const openModal = (itemId) => {
-            const item = appData.items.find(i => i.id === itemId);
-            if (!item) return;
-            dom.modalBodyEl.innerHTML = `
-                <h3 class="text-2xl font-bold mb-4">${item.icon} ${item.name}</h3>
-                <p class="mb-4">${item.description}</p>
-                <p class="text-sm text-slate-400">${(item.id === 9 || item.id === 11) ? '💡 이 물품에는 숨겨진 가치가 있을 수 있습니다.' : ''}</p>
-            `;
-            dom.modalEl.classList.remove('hidden');
+        const openItemSelectionModal = (slotIndex) => {
+            const rankedItemIds = new Set(appData.state.rankedItems.filter(Boolean).map(item => item.id));
+            const availableItems = appData.items.filter(item => !rankedItemIds.has(item.id));
+            
+            dom.itemSelectionModalBodyEl.innerHTML = '';
+            if (availableItems.length === 0) {
+                dom.itemSelectionModalBodyEl.innerHTML = `<p class="text-center text-slate-400 col-span-full">모든 물품이 선택되었습니다.</p>`;
+            } else {
+                availableItems.forEach(item => {
+                    const itemEl = document.createElement('button');
+                    itemEl.className = 'p-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-left transition';
+                    itemEl.dataset.itemId = item.id;
+                    itemEl.innerHTML = `<p class="font-bold text-lg">${item.icon} ${item.name}</p>`;
+                    itemEl.onclick = () => {
+                        appData.state.rankedItems[slotIndex] = { id: item.id, reason: '' };
+                        closeModal(dom.itemSelectionModalEl);
+                        renderRankingSlots();
+                        autoSave();
+                    };
+                    dom.itemSelectionModalBodyEl.appendChild(itemEl);
+                });
+            }
+            openModal(dom.itemSelectionModalEl);
         };
 
-        const closeModal = () => {
-            dom.modalEl.classList.add('hidden');
+        const generateReport = () => {
+            dom.finalGroupName.textContent = appData.state.groupName;
+            dom.finalStudentName.textContent = appData.state.studentName;
+            dom.finalStudentNumber.textContent = appData.state.studentNumber;
+            dom.finalRole.textContent = appData.roles[appData.state.selectedRole].name;
+            dom.finalList.innerHTML = '';
+            
+            let totalScore = 0;
+            appData.state.rankedItems.forEach((itemData, index) => {
+                const item = appData.items.find(i => i.id === itemData.id);
+                const userRank = index + 1;
+                const nasaRank = item.nasaRank;
+                totalScore += Math.abs(userRank - nasaRank);
+
+                const reportItem = document.createElement('div');
+                reportItem.className = 'p-3 bg-slate-900 rounded-md';
+                reportItem.innerHTML = `
+                    <div>
+                        <p class="font-bold text-lg">${userRank}위. ${item.icon} ${item.name}</p>
+                        <p class="text-sm text-slate-300 mt-2 pl-4">이유: ${itemData.reason || '작성하지 않음'}</p>
+                    </div>
+                `;
+                dom.finalList.appendChild(reportItem);
+            });
+
+            let evaluation = '', eng_eval = '';
+            if (totalScore <= 25) { evaluation = 'NASA에서 연락옵니다. 당신은 외계인인가요?'; eng_eval = 'Excellent';}
+            else if (totalScore <= 32) { evaluation = '달 부동산 투자 추천! 당신은 이미 달 전문가입니다.'; eng_eval = 'Good';}
+            else if (totalScore <= 45) { evaluation = '아슬아슬... 지구에 갈 수 있겠죠?'; eng_eval = 'Average';}
+            else if (totalScore <= 55) { evaluation = '지구에 있는 가족... 생각나시나요?'; eng_eval = 'Fair';}
+            else if (totalScore <= 70) { evaluation = '혹시 하고 싶은 말이 있나요?'; eng_eval = 'Danger';}
+            else { evaluation = '그동안 함께해서 행복했어요.'; eng_eval = 'U dead';}
+            
+            dom.scoreSummary.innerHTML = `
+                <p class="text-xl font-bold">총점: <span class="text-red-400">${totalScore}점</span> (낮을수록 생존 확률이 높습니다)</p>
+                <p class="text-2xl font-bold mt-2 text-yellow-300">"${evaluation} (${eng_eval})"</p>
+            `;
+            
+            showScreen('report-screen');
         };
         
         const openKnowledgeModal = () => {
@@ -433,14 +644,14 @@
             roleList.className = "list-disc list-inside space-y-1 text-slate-300";
             role.knowledge.forEach(fact => {
                 const li = document.createElement('li');
-                li.textContent = fact;
+                li.textContent = fact.text;
                 roleList.appendChild(li);
             });
             roleSection.appendChild(roleList);
             scrollContainer.appendChild(roleSection);
 
             const separator = document.createElement('hr');
-            separator.className = "border-slate-600";
+            separator.className = "border-slate-600 my-4";
             scrollContainer.appendChild(separator);
 
             const itemSection = document.createElement('div');
@@ -448,7 +659,6 @@
             itemTitle.className = "text-lg font-bold text-cyan-300 mb-2";
             itemTitle.textContent = "🎒 물품 정보";
             itemSection.appendChild(itemTitle);
-
             const itemListContainer = document.createElement('div');
             itemListContainer.className = "space-y-3";
             appData.items.forEach(item => {
@@ -457,273 +667,187 @@
                 itemInfoEl.innerHTML = `<p class="font-bold">${item.icon} ${item.name}</p><p class="text-sm text-slate-400 mt-1">${item.description}</p>`;
                 itemListContainer.appendChild(itemInfoEl);
             });
-            itemSection.appendChild(itemTitle);
+            itemSection.appendChild(itemListContainer);
             scrollContainer.appendChild(itemSection);
             
             dom.knowledgeModalBodyEl.appendChild(scrollContainer);
-
-            dom.knowledgeModalEl.classList.remove('hidden');
-        };
-
-        const closeKnowledgeModal = () => {
-            dom.knowledgeModalEl.classList.add('hidden');
+            openModal(dom.knowledgeModalEl);
         };
         
-        const renderRankedItemContent = (itemId, index) => {
-            const item = appData.items.find(i => i.id == itemId);
-            return `
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="drag-handle">⠿</span>
-                    <div class="flex-1 min-w-0 font-bold text-lg text-orange-400 flex items-center pointer-events-none">
-                        <span class="rank-number mr-2">${index + 1}위.</span>
-                        <span>${item.icon} ${item.name}</span>
-                    </div>
-                    <button data-info-id="${item.id}" class="text-xs bg-sky-600 hover:bg-sky-500 text-white py-1 px-2 rounded ml-auto">정보</button>
-                </div>
-                <textarea data-reason-id="${item.id}" class="w-full bg-slate-900 text-white rounded p-2 text-sm" rows="2" placeholder="이 물품을 이 순위로 정한 이유는..."></textarea>
-            `;
-        };
-        
-        const updateRankNumbers = () => {
-            const rankedItems = dom.rankListEl.querySelectorAll('.ranked-item');
-            rankedItems.forEach((item, index) => {
-                const rankNumberEl = item.querySelector('.rank-number');
-                if (rankNumberEl) {
-                    rankNumberEl.textContent = `${index + 1}위.`;
-                }
-            });
-            checkFinishButton();
-        };
-
-        const checkFinishButton = () => {
-            const itemCount = dom.rankListEl.querySelectorAll('.ranked-item').length;
-            dom.finishButton.disabled = (itemCount !== 15);
-        };
-        
-        const generateReport = () => {
-            dom.finalGroupName.textContent = appData.state.groupName;
-            dom.finalStudentName.textContent = appData.state.studentName;
-            dom.finalStudentNumber.textContent = appData.state.studentNumber;
-            dom.finalRole.textContent = appData.roles[appData.state.selectedRole].name;
-            dom.finalList.innerHTML = '';
+        const generateReportCanvas = () => {
+            const reportContent = document.getElementById('report-content');
+            const finalListEl = document.getElementById('final-list');
             
-            const rankedElements = Array.from(dom.rankListEl.querySelectorAll('.ranked-item'));
+            finalListEl.style.maxHeight = 'none';
+            finalListEl.style.overflow = 'visible';
 
-            rankedElements.forEach((el, index) => {
-                const itemId = el.dataset.id;
-                const item = appData.items.find(i => i.id == itemId);
-                const reason = el.querySelector(`textarea[data-reason-id="${itemId}"]`).value;
-
-                const reportItem = document.createElement('div');
-                reportItem.className = 'p-3 bg-slate-900 rounded-md';
-                reportItem.innerHTML = `
-                    <p class="font-bold text-lg">${index + 1}위. ${item.icon} ${item.name}</p>
-                    <p class="text-sm text-slate-300 pl-4 mt-1">이유: ${reason || '작성하지 않음'}</p>
-                `;
-                dom.finalList.appendChild(reportItem);
+            return new Promise((resolve) => {
+                html2canvas(reportContent, { 
+                    backgroundColor: "#172a46",
+                    onclone: (doc) => { doc.getElementById('report-content').style.color = '#e6f1ff'; }
+                }).then(canvas => {
+                    finalListEl.style.maxHeight = null;
+                    finalListEl.style.overflow = 'auto';
+                    resolve(canvas);
+                });
             });
-
-            showScreen('report-screen');
         };
         
         const downloadReport = () => {
-            const reportContent = document.getElementById('report-content');
-            const groupName = appData.state.groupName || '모둠없음';
-            const studentNumber = appData.state.studentNumber || '00';
-            const studentName = appData.state.studentName || '이름없음';
-            const fileName = `핑키네프로젝트001_${groupName}_${studentNumber}번${studentName}.png`;
-
-            html2canvas(reportContent, { 
-                backgroundColor: "#172a46",
-                onclone: (doc) => {
-                     doc.getElementById('report-content').style.color = '#e6f1ff';
-                }
-            }).then(canvas => {
+             generateReportCanvas().then(canvas => {
                 const link = document.createElement('a');
-                link.download = fileName;
+                const groupName = appData.state.groupName || '소속없음';
+                const studentNumber = appData.state.studentNumber || '00';
+                const studentName = appData.state.studentName || '이름없음';
+                link.download = `달생존_${groupName}_${studentNumber}번_${studentName}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             });
         };
-        
-        const restart = (fromButton = false) => {
-            if (fromButton && !confirm('정말 모든 진행 상황을 삭제하고 처음부터 다시 시작하시겠습니까?')) {
-                return;
+
+        const shareReport = async () => {
+            try {
+                const canvas = await generateReportCanvas();
+                canvas.toBlob(async (blob) => {
+                    const groupName = appData.state.groupName || '소속없음';
+                    const studentNumber = appData.state.studentNumber || '00';
+                    const studentName = appData.state.studentName || '이름없음';
+                    const fileName = `달생존_${groupName}_${studentNumber}번_${studentName}.png`;
+                    const file = new File([blob], fileName, { type: 'image/png' });
+
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: '나의 달 생존 보고서',
+                            text: '달에서 살아남기! 제 점수를 확인해보세요!',
+                        });
+                    } else {
+                        showAlert('이 브라우저에서는 공유 기능을 지원하지 않습니다.', '알림');
+                    }
+                }, 'image/png');
+            } catch (error) {
+                console.error('공유 기능 오류:', error);
+                showAlert('이미지를 공유하는 중 오류가 발생했습니다.', '오류');
             }
-            localStorage.removeItem(SAVE_KEY);
-            window.location.reload();
         };
-        
-        const populateStudentNumbers = () => {
-            dom.studentNumberInput.innerHTML = '<option value="">-- 번호를 선택하세요 --</option>';
-            for (let i = 1; i <= 40; i++) {
-                const numberString = String(i).padStart(2, '0');
-                const option = document.createElement('option');
-                option.value = numberString;
-                option.textContent = numberString;
-                dom.studentNumberInput.appendChild(option);
-            }
-        };
+
+        const restart = () => { localStorage.removeItem(SAVE_KEY); window.location.reload(); };
 
         const saveState = () => {
             try {
-                const rankedItemIds = Array.from(dom.rankListEl.querySelectorAll('.ranked-item')).map(el => parseInt(el.dataset.id, 10));
-                const poolItemIds = Array.from(dom.itemsPoolEl.querySelectorAll('.item-card')).map(el => parseInt(el.dataset.id, 10));
-                const reasons = {};
-                dom.rankListEl.querySelectorAll('textarea[data-reason-id]').forEach(textarea => {
-                    reasons[textarea.dataset.reasonId] = textarea.value;
+                if (appData.state.currentScreen === 'intro-screen' || appData.state.currentScreen === 'emergency-screen') return;
+                appData.state.rankedItems.forEach((itemData, index) => {
+                    if (itemData) {
+                        const textarea = dom.rankListEl.querySelector(`[data-reason-for-item="${itemData.id}"]`);
+                        if (textarea) appData.state.rankedItems[index].reason = textarea.value;
+                    }
                 });
-
-                const stateToSave = { ...appData.state, rankedItemIds, poolItemIds, reasons };
-                localStorage.setItem(SAVE_KEY, JSON.stringify(stateToSave));
-            } catch (e) {
-                console.error("저장 중 오류 발생:", e);
-            }
+                localStorage.setItem(SAVE_KEY, JSON.stringify({ ...appData.state, version: '5.2' }));
+            } catch (e) { console.error("저장 중 오류:", e); }
         };
+        const autoSave = () => saveState();
 
         const restoreSession = () => {
             try {
                 const savedStateJSON = localStorage.getItem(SAVE_KEY);
-                if (!savedStateJSON) return;
+                if (!savedStateJSON) return false;
                 const savedState = JSON.parse(savedStateJSON);
-
-                appData.state = { ...appData.state, ...savedState };
-
-                dom.groupNameInput.value = savedState.groupName || '';
-                dom.studentNumberInput.value = savedState.studentNumber || '';
-                dom.studentNameInput.value = savedState.studentName || '';
-
-                dom.itemsPoolEl.innerHTML = '';
-                dom.rankListEl.innerHTML = '';
-
-                const poolItemIds = new Set(savedState.poolItemIds || appData.items.map(i => i.id));
-                const rankedItemIds = savedState.rankedItemIds || [];
-
-                rankedItemIds.forEach((itemId, index) => {
-                    const item = appData.items.find(i => i.id === itemId);
-                    if (item) {
-                        const itemEl = document.createElement('div');
-                        itemEl.dataset.id = item.id;
-                        itemEl.className = 'ranked-item bg-slate-700 p-3 rounded-md';
-                        itemEl.innerHTML = renderRankedItemContent(item.id, index);
-                        dom.rankListEl.appendChild(itemEl);
-                        if (savedState.reasons && savedState.reasons[itemId]) {
-                            itemEl.querySelector('textarea').value = savedState.reasons[itemId];
-                        }
-                    }
-                    poolItemIds.delete(itemId);
-                });
-                
-                poolItemIds.forEach(itemId => {
-                    const item = appData.items.find(i => i.id === itemId);
-                    if(item) {
-                        const itemEl = document.createElement('div');
-                        itemEl.dataset.id = item.id;
-                        itemEl.className = 'item-card bg-slate-700 p-2 rounded-md flex items-center gap-2';
-                        itemEl.innerHTML = createPoolItemHTML(item);
-                        dom.itemsPoolEl.appendChild(itemEl);
-                    }
-                });
-                
-                if(savedState.selectedRole) {
-                    selectRole(savedState.selectedRole, false);
+                if (!savedState.version || savedState.version < '5.2') {
+                    localStorage.removeItem(SAVE_KEY);
+                    return false;
                 }
-                
-                showScreen(savedState.currentScreen || 'intro-screen');
-                updateRankNumbers();
+                appData.state = savedState;
+                dom.groupNameInput.value = appData.state.groupName || '';
+                dom.studentNumberInput.value = appData.state.studentNumber || '';
+                dom.studentNameInput.value = appData.state.studentName || '';
+                const screenToRestore = appData.state.currentScreen === 'emergency-screen' ? 'role-screen' : appData.state.currentScreen;
+                showScreen(screenToRestore || 'intro-screen');
+                if (screenToRestore === 'main-screen') renderRankingSlots();
+                return true;
             } catch (e) {
-                console.error("복원 중 오류 발생:", e);
                 localStorage.removeItem(SAVE_KEY);
+                return false;
             }
         };
 
-        // --- Event Listeners and Initializers ---
+        const hasSavedData = () => !!localStorage.getItem(SAVE_KEY);
+        
+        const initialize = () => {
+            for (let i = 1; i <= 40; i++) {
+                const opt = document.createElement('option');
+                opt.value = opt.textContent = String(i).padStart(2, '0');
+                dom.studentNumberInput.appendChild(opt);
+            }
+            document.body.addEventListener('click', (event) => {
+                const target = event.target;
+                const roleCard = target.closest('.role-card');
+                const emptySlot = target.closest('.rank-slot.empty');
+                const infoButton = target.closest('[data-info-id]');
+                const clearButton = target.closest('[data-clear-slot]');
 
-        new Sortable(dom.itemsPoolEl, {
-            group: 'shared',
-            handle: '.drag-handle',
-            animation: 150,
-            onAdd: (evt) => {
-                const itemEl = evt.item;
-                const itemId = parseInt(itemEl.dataset.id, 10);
-                const item = appData.items.find(i => i.id === itemId);
-                if (item) {
-                    itemEl.className = 'item-card bg-slate-700 p-2 rounded-md flex items-center gap-2';
-                    itemEl.innerHTML = createPoolItemHTML(item);
+                if (target.id === 'start-mission-btn') startMission();
+                else if (target.id === 'skip-emergency-btn') skipEmergencySequence();
+                else if (target.id === 'proceed-to-roles-btn') showScreen('role-screen');
+                else if (roleCard) selectRole(roleCard.dataset.role);
+                else if (target.id === 'go-to-ranking-btn') { showScreen('main-screen'); renderRankingSlots(); }
+                else if (target.id === 'finish-button') generateReport();
+                else if (target.id === 'open-knowledge-modal-btn') openKnowledgeModal();
+                else if (target.id === 'back-to-start-btn') showConfirm('지금까지의 진행 상황이 모두 사라집니다. 정말 처음으로 돌아가시겠습니까?', restart, '처음으로 돌아가기');
+                else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까? 진행 상황은 저장됩니다.', () => { window.close(); }, '종료');
+                else if (target.id === 'restart-btn') showConfirm('정말 모든 진행 상황을 삭제하고 다시 시작하시겠습니까?', restart, '다시 시작하기');
+                else if (target.id === 'open-save-share-modal-btn') openModal(dom.saveShareModalEl);
+                else if (target.id === 'save-image-btn') { closeModal(dom.saveShareModalEl); downloadReport(); }
+                else if (target.id === 'share-image-btn') { closeModal(dom.saveShareModalEl); shareReport(); }
+                else if (target.closest('.close-modal-btn') || (target.classList.contains('modal-base') && !target.querySelector('.modal-content'))) closeModal(target.closest('.modal-base'));
+                else if(target.closest('.modal-ok-btn') || target.closest('.modal-cancel-btn')) closeModal(target.closest('.modal-base'));
+                else if (emptySlot) openItemSelectionModal(parseInt(emptySlot.dataset.slotIndex, 10));
+                else if (infoButton) {
+                    const item = appData.items.find(i => i.id == infoButton.dataset.infoId);
+                    if (item) {
+                        dom.itemInfoModalBodyEl.innerHTML = `<h3 class="text-2xl font-bold mb-4">${item.icon} ${item.name}</h3><p>${item.description || '정보 없음'}</p>`;
+                        openModal(dom.itemInfoModalEl);
+                    }
+                } else if (clearButton) {
+                    const slotIndex = parseInt(clearButton.dataset.clearSlot, 10);
+                    appData.state.rankedItems[slotIndex] = null;
+                    renderRankingSlots();
+                    autoSave();
                 }
-                saveState();
-            },
-        });
+            });
 
-        new Sortable(dom.rankListEl, {
-            group: 'shared',
-            handle: '.drag-handle',
-            animation: 150,
-            onAdd: (evt) => {
-                const itemEl = evt.item;
-                const itemId = parseInt(itemEl.dataset.id, 10);
-                itemEl.className = 'ranked-item bg-slate-700 p-3 rounded-md';
-                itemEl.innerHTML = renderRankedItemContent(itemId, evt.newDraggableIndex);
-                updateRankNumbers();
-                saveState();
-            },
-            onUpdate: () => {
-                updateRankNumbers();
-                saveState();
+            ['groupNameInput', 'studentNameInput', 'studentNumberInput'].forEach(id => {
+                dom[id].addEventListener('input', () => { appData.state[id.replace('Input','')] = dom[id].value; autoSave(); });
+            });
+            dom.rankListEl.addEventListener('input', (e) => { if(e.target.matches('textarea')) autoSave(); });
+
+            new Sortable(dom.rankListEl, {
+                animation: 150, handle: '.drag-handle',
+                onEnd: (evt) => {
+                    const itemData = appData.state.rankedItems.splice(evt.oldIndex, 1)[0];
+                    appData.state.rankedItems.splice(evt.newIndex, 0, itemData);
+                    renderRankingSlots();
+                    autoSave();
+                }
+            });
+
+            if (hasSavedData()) {
+                if(!restoreSession()) resetState();
+            } else {
+                resetState();
             }
-        });
 
-        document.addEventListener('click', (event) => {
-            const target = event.target;
-            const roleCard = target.closest('.role-card');
-            const infoButton = target.closest('button[data-info-id]');
+            dom.groupNameInput.value = appData.state.groupName || '';
+            dom.studentNumberInput.value = appData.state.studentNumber || '';
+            dom.studentNameInput.value = appData.state.studentName || '';
+            showScreen(appData.state.currentScreen);
+            if(appData.state.currentScreen === 'main-screen') renderRankingSlots();
 
-            if (target.id === 'start-mission-btn') startMission();
-            else if (roleCard) selectRole(roleCard.dataset.role);
-            else if (target.id === 'go-to-ranking-btn') showScreen('main-screen');
-            else if (target.id === 'open-knowledge-modal-btn') openKnowledgeModal();
-            else if (target.id === 'finish-button') generateReport();
-            else if (target.id === 'download-report-btn') downloadReport();
-            else if (target.id === 'restart-btn') restart(true);
-            else if (target.id === 'close-item-modal-btn') closeModal();
-            else if (target.id === 'close-knowledge-modal-btn') closeKnowledgeModal();
-            else if (infoButton) {
-                event.stopPropagation();
-                const itemId = parseInt(infoButton.dataset.infoId, 10);
-                openModal(itemId);
-            }
-        });
-
-        dom.rankListEl.addEventListener('input', (event) => {
-            if (event.target.tagName === 'TEXTAREA') {
-                saveState();
-            }
-        });
-
-        window.onclick = (event) => {
-            if (event.target == dom.modalEl) closeModal();
-            if (event.target == dom.knowledgeModalEl) closeKnowledgeModal();
+            setInterval(saveState, 30000);
+            window.addEventListener('beforeunload', saveState);
+            document.addEventListener('visibilitychange', () => { if (document.hidden) saveState(); });
         };
         
-        window.addEventListener('load', () => {
-            populateStudentNumbers();
-            initializeItems();
-            const savedStateJSON = localStorage.getItem(SAVE_KEY);
-            if (savedStateJSON) {
-                const resumeBtn = document.getElementById('resume-btn');
-                const startNewBtn = document.getElementById('start-new-btn');
-                if (resumeBtn && startNewBtn) {
-                    dom.resumeModalEl.classList.remove('hidden');
-                    resumeBtn.onclick = () => {
-                        restoreSession();
-                        dom.resumeModalEl.classList.add('hidden');
-                    };
-                    startNewBtn.onclick = () => {
-                        restart(false);
-                    };
-                }
-            }
-        });
+        initialize();
     })();
     </script>
 </body>
