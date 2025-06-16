@@ -136,9 +136,14 @@
                         <input type="text" id="studentNameInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" placeholder="예) 홍길동" required>
                     </div>
                 </div>
-                <button id="start-mission-btn" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-6 sm:px-8 rounded-lg transition-transform transform hover:scale-105">
-                    미션 시작
-                </button>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="start-mission-btn" class="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                        미션 시작
+                    </button>
+                    <a href="https://moon-survival-for-class.pages.dev" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-block bg-sky-600 hover:bg-sky-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                        모둠활동
+                    </a>
+                </div>
                 <p class="text-xs text-slate-500 mt-8">made by.핑키네</p>
             </div>
             
@@ -742,7 +747,7 @@
                         if (textarea) appData.state.rankedItems[index].reason = textarea.value;
                     }
                 });
-                localStorage.setItem(SAVE_KEY, JSON.stringify({ ...appData.state, version: '5.2' }));
+                localStorage.setItem(SAVE_KEY, JSON.stringify({ ...appData.state, version: '5.3' }));
             } catch (e) { console.error("저장 중 오류:", e); }
         };
         const autoSave = () => saveState();
@@ -752,7 +757,7 @@
                 const savedStateJSON = localStorage.getItem(SAVE_KEY);
                 if (!savedStateJSON) return false;
                 const savedState = JSON.parse(savedStateJSON);
-                if (!savedState.version || savedState.version < '5.2') {
+                if (!savedState.version || savedState.version < '5.3') {
                     localStorage.removeItem(SAVE_KEY);
                     return false;
                 }
@@ -793,7 +798,7 @@
                 else if (target.id === 'finish-button') generateReport();
                 else if (target.id === 'open-knowledge-modal-btn') openKnowledgeModal();
                 else if (target.id === 'back-to-start-btn') showConfirm('지금까지의 진행 상황이 모두 사라집니다. 정말 처음으로 돌아가시겠습니까?', restart, '처음으로 돌아가기');
-                else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까? 진행 상황은 저장됩니다.', () => { window.close(); }, '종료');
+                else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까?', () => { window.close(); }, '종료');
                 else if (target.id === 'restart-btn') showConfirm('정말 모든 진행 상황을 삭제하고 다시 시작하시겠습니까?', restart, '다시 시작하기');
                 else if (target.id === 'open-save-share-modal-btn') openModal(dom.saveShareModalEl);
                 else if (target.id === 'save-image-btn') { closeModal(dom.saveShareModalEl); downloadReport(); }
