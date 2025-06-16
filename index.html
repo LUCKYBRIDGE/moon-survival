@@ -114,11 +114,9 @@
 
             <!-- Screen 1: Intro -->
             <div id="intro-screen" class="screen active-screen text-center">
-                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">달에서 길을 잃다</h1>
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">달 탐사 임무</h1>
                 <p class="text-base sm:text-lg md:text-xl text-slate-300 mb-6 max-w-2xl mx-auto">
-                    당신이 탄 우주선이 달에 불시착했습니다.<br>
-                    살아남기 위해, 약 300km 떨어진 구조선까지 가야 합니다.<br>
-                    주어진 15개 물품의 생존 우선순위를 정하고, 그 이유를 설명하세요!
+                    당신은 우주 비행사로 선별되었습니다.<br>당신의 소속을 입력하십시오.
                 </p>
                 <div class="max-w-sm mx-auto mb-8 space-y-4">
                     <div>
@@ -138,7 +136,7 @@
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <button id="start-mission-btn" class="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
-                        미션 시작
+                        임무 시작
                     </button>
                     <a href="https://moon-survival-for-class.pages.dev" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-block bg-sky-600 hover:bg-sky-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
                         모둠활동
@@ -253,6 +251,12 @@
     <!-- Modals and Global Buttons -->
     <div id="global-buttons" class="fixed bottom-5 left-5 right-5 flex justify-between items-center z-50 pointer-events-none">
         <button id="back-to-start-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto">처음으로</button>
+        <div class="flex-grow"></div>
+        <div id="fullscreen-toggle" class="pointer-events-auto hidden">
+            <button id="fullscreen-enter-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105">전체화면</button>
+            <button id="fullscreen-exit-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105 hidden">전체화면 해제</button>
+        </div>
+        <div class="flex-grow"></div>
         <button id="exit-app-btn" class="bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto ml-auto">종료</button>
     </div>
     
@@ -322,8 +326,8 @@
     (function() {
         let emergencySequenceTimeoutId = null; 
         const appData = {
-            emergencyMessages: [
-                "치직... 치지직...", "여기는 통제실, 응답하라 아르테미스 1호!", "알 수 없는 충격으로 선체 손상 확인.",
+            getEmergencyMessages: () => [
+                "치직... 치지직...", `여기는 통제실, 응답하라 '${appData.state.groupName}' 1호!`, "알 수 없는 충격으로 선체 손상 확인.",
                 "현재 위치를 특정할 수 없음.", "대원, 당신의 판단에 모두의 생존이 달려있다.", "구조선까지는 약 300km.",
                 "전문지식을 활용해, 15개 비상 물품의 생존 순위를 정해라.", "반드시... 반드시 살아남아라!"
             ],
@@ -387,9 +391,12 @@
             finalList: document.getElementById('final-list'),
             backToStartBtn: document.getElementById('back-to-start-btn'),
             exitAppBtn: document.getElementById('exit-app-btn'),
+            fullscreenToggle: document.getElementById('fullscreen-toggle'),
+            fullscreenEnterBtn: document.getElementById('fullscreen-enter-btn'),
+            fullscreenExitBtn: document.getElementById('fullscreen-exit-btn'),
         };
 
-        const SAVE_KEY = 'pinky-moon-survival-save-v5.3';
+        const SAVE_KEY = 'pinky-moon-survival-save-v5.4';
         
         const resetState = () => {
              appData.state = {
@@ -421,6 +428,7 @@
         
         const showEmergencySequence = () => {
             showScreen('emergency-screen');
+            const messages = appData.getEmergencyMessages();
             dom.emergencyMessageContainer.innerHTML = '';
             dom.proceedToRolesBtn.classList.add('hidden');
             dom.skipEmergencyBtn.classList.remove('hidden');
@@ -428,13 +436,13 @@
             let messageIndex = 0;
             const showNextMessage = () => {
                 if (emergencySequenceTimeoutId) clearTimeout(emergencySequenceTimeoutId);
-                if (messageIndex >= appData.emergencyMessages.length) {
+                if (messageIndex >= messages.length) {
                     dom.skipEmergencyBtn.classList.add('hidden');
                     dom.proceedToRolesBtn.classList.remove('hidden');
                     return;
                 }
                 const p = document.createElement('p');
-                p.textContent = appData.emergencyMessages[messageIndex];
+                p.textContent = messages[messageIndex];
                 dom.emergencyMessageContainer.appendChild(p);
                 messageIndex++;
                 emergencySequenceTimeoutId = setTimeout(showNextMessage, 2200);
@@ -444,7 +452,8 @@
         
         const skipEmergencySequence = () => {
             if (emergencySequenceTimeoutId) clearTimeout(emergencySequenceTimeoutId);
-            dom.emergencyMessageContainer.innerHTML = appData.emergencyMessages
+            const messages = appData.getEmergencyMessages();
+            dom.emergencyMessageContainer.innerHTML = messages
                 .map(msg => `<p style="animation: none; opacity: 1;">${msg}</p>`).join('');
             dom.skipEmergencyBtn.classList.add('hidden');
             dom.proceedToRolesBtn.classList.remove('hidden');
@@ -459,14 +468,17 @@
                 dom.emergencyScreen.style.display = 'flex';
                 dom.backToStartBtn.classList.add('hidden');
                 dom.exitAppBtn.classList.add('hidden');
+                dom.fullscreenToggle.classList.add('hidden');
             } else {
                 activeScreen.classList.add('active-screen');
                 if (screenId === 'intro-screen') {
                     dom.backToStartBtn.classList.add('hidden');
                     dom.exitAppBtn.classList.add('hidden');
+                    dom.fullscreenToggle.classList.add('hidden');
                 } else {
                     dom.backToStartBtn.classList.remove('hidden');
                     dom.exitAppBtn.classList.remove('hidden');
+                    dom.fullscreenToggle.classList.remove('hidden');
                 }
             }
             appData.state.currentScreen = screenId;
@@ -747,7 +759,7 @@
                         if (textarea) appData.state.rankedItems[index].reason = textarea.value;
                     }
                 });
-                localStorage.setItem(SAVE_KEY, JSON.stringify({ ...appData.state, version: '5.3' }));
+                localStorage.setItem(SAVE_KEY, JSON.stringify({ ...appData.state, version: '5.4' }));
             } catch (e) { console.error("저장 중 오류:", e); }
         };
         const autoSave = () => saveState();
@@ -757,7 +769,7 @@
                 const savedStateJSON = localStorage.getItem(SAVE_KEY);
                 if (!savedStateJSON) return false;
                 const savedState = JSON.parse(savedStateJSON);
-                if (!savedState.version || savedState.version < '5.3') {
+                if (!savedState.version || savedState.version < '5.4') {
                     localStorage.removeItem(SAVE_KEY);
                     return false;
                 }
@@ -817,7 +829,17 @@
                     appData.state.rankedItems[slotIndex] = null;
                     renderRankingSlots();
                     autoSave();
+                } else if (target.id === 'fullscreen-enter-btn') {
+                    document.documentElement.requestFullscreen().catch(e => console.error(e));
+                } else if (target.id === 'fullscreen-exit-btn') {
+                    document.exitFullscreen().catch(e => console.error(e));
                 }
+            });
+
+            document.addEventListener('fullscreenchange', () => {
+                const isFullscreen = !!document.fullscreenElement;
+                dom.fullscreenEnterBtn.classList.toggle('hidden', isFullscreen);
+                dom.fullscreenExitBtn.classList.toggle('hidden', !isFullscreen);
             });
 
             ['groupNameInput', 'studentNameInput', 'studentNumberInput'].forEach(id => {
@@ -835,17 +857,36 @@
                 }
             });
 
+            resetState();
+            showScreen('intro-screen');
             if (hasSavedData()) {
-                if(!restoreSession()) resetState();
-            } else {
-                resetState();
+                const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
+                const resumeInfo = document.getElementById('resume-info');
+                resumeInfo.innerHTML = `
+                    <div class="bg-slate-700 p-3 rounded-lg">
+                        <p><strong>소속:</strong> ${saved.groupName || '미정'}</p>
+                        <p><strong>이름:</strong> ${saved.studentName || '미정'}</p>
+                        <p><strong>전문분야:</strong> ${saved.selectedRole ? appData.roles[saved.selectedRole].name : '미선택'}</p>
+                    </div>
+                `;
+                openModal(dom.resumeModalEl);
             }
-
-            dom.groupNameInput.value = appData.state.groupName || '';
-            dom.studentNumberInput.value = appData.state.studentNumber || '';
-            dom.studentNameInput.value = appData.state.studentName || '';
-            showScreen(appData.state.currentScreen);
-            if(appData.state.currentScreen === 'main-screen') renderRankingSlots();
+            
+            document.getElementById('resume-btn').onclick = () => {
+                if (restoreSession()) {
+                    closeModal(dom.resumeModalEl);
+                } else {
+                    showAlert('저장된 데이터를 불러오는데 실패했습니다. 새로 시작합니다.', '오류');
+                    closeModal(dom.resumeModalEl);
+                    restart();
+                }
+            };
+            document.getElementById('start-new-btn').onclick = () => {
+                showConfirm('저장된 진행 상황이 모두 삭제됩니다. 정말 새로 시작하시겠습니까?', () => {
+                    localStorage.removeItem(SAVE_KEY);
+                    closeModal(dom.resumeModalEl);
+                }, '새로 시작');
+            };
 
             setInterval(saveState, 30000);
             window.addEventListener('beforeunload', saveState);
