@@ -114,9 +114,11 @@
 
             <!-- Screen 1: Intro -->
             <div id="intro-screen" class="screen active-screen text-center">
-                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">달 탐사 임무</h1>
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">달에서 길을 잃다</h1>
                 <p class="text-base sm:text-lg md:text-xl text-slate-300 mb-6 max-w-2xl mx-auto">
-                    당신은 우주 비행사로 선별되었습니다.<br>당신의 소속을 입력하십시오.
+                    당신이 탄 우주선이 달에 불시착했습니다.<br>
+                    살아남기 위해, 약 300km 떨어진 구조선까지 가야 합니다.<br>
+                    주어진 15개 물품의 생존 우선순위를 정하고, 그 이유를 설명하세요!
                 </p>
                 <div class="max-w-sm mx-auto mb-8 space-y-4">
                     <div>
@@ -136,7 +138,7 @@
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <button id="start-mission-btn" class="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
-                        임무 시작
+                        미션 시작
                     </button>
                     <a href="https://moon-survival-for-class.pages.dev" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-block bg-sky-600 hover:bg-sky-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
                         모둠활동
@@ -229,9 +231,6 @@
                      <a href="https://pinkylucky.tistory.com/2" target="_blank" rel="noopener noreferrer" class="inline-block bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition">
                         NASA 전문가 해설
                     </a>
-                     <button id="restart-btn" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
-                        다시하기
-                    </button>
                 </div>
             </div>
         </div>
@@ -251,13 +250,11 @@
     <!-- Modals and Global Buttons -->
     <div id="global-buttons" class="fixed bottom-5 left-5 right-5 flex justify-between items-center z-50 pointer-events-none">
         <button id="back-to-start-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto">처음으로</button>
-        <div class="flex-grow"></div>
-        <div id="fullscreen-toggle" class="pointer-events-auto hidden">
+        <div id="fullscreen-toggle" class="pointer-events-auto hidden mx-auto">
             <button id="fullscreen-enter-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105">전체화면</button>
             <button id="fullscreen-exit-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105 hidden">전체화면 해제</button>
         </div>
-        <div class="flex-grow"></div>
-        <button id="exit-app-btn" class="bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto ml-auto">종료</button>
+        <button id="exit-app-btn" class="bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto">종료</button>
     </div>
     
     <!-- Item Info Modal -->
@@ -327,7 +324,7 @@
         let emergencySequenceTimeoutId = null; 
         const appData = {
             getEmergencyMessages: () => [
-                "치직... 치지직...", `여기는 통제실, 응답하라 '${appData.state.groupName}' 1호!`, "알 수 없는 충격으로 선체 손상 확인.",
+                "치직... 치지직...", `여기는 통제실, 응답하라 '${appData.state.groupName || '대원'}' 1호!`, "알 수 없는 충격으로 선체 손상 확인.",
                 "현재 위치를 특정할 수 없음.", "대원, 당신의 판단에 모두의 생존이 달려있다.", "구조선까지는 약 300km.",
                 "전문지식을 활용해, 15개 비상 물품의 생존 순위를 정해라.", "반드시... 반드시 살아남아라!"
             ],
@@ -810,7 +807,7 @@
                 else if (target.id === 'finish-button') generateReport();
                 else if (target.id === 'open-knowledge-modal-btn') openKnowledgeModal();
                 else if (target.id === 'back-to-start-btn') showConfirm('지금까지의 진행 상황이 모두 사라집니다. 정말 처음으로 돌아가시겠습니까?', restart, '처음으로 돌아가기');
-                else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까?', () => { window.close(); }, '종료');
+                else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까?', () => { const newWindow = window.open('about:blank', '_self'); newWindow.close(); }, '종료');
                 else if (target.id === 'restart-btn') showConfirm('정말 모든 진행 상황을 삭제하고 다시 시작하시겠습니까?', restart, '다시 시작하기');
                 else if (target.id === 'open-save-share-modal-btn') openModal(dom.saveShareModalEl);
                 else if (target.id === 'save-image-btn') { closeModal(dom.saveShareModalEl); downloadReport(); }
