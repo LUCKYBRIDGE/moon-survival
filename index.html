@@ -7,6 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!--
+        Copyright (c) 2025 [Pinky]
+        This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+        You should have received a copy of the license along with this work. If not, see <http://creativecommons.org/licenses/by-nc-sa/4.0/>.
+    -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
         html, body {
@@ -27,7 +32,8 @@
             align-items: center;
             justify-content: center;
             overflow-y: auto;
-            padding: 0.5rem;
+            /* 작은 화면에서의 좌우 여백 확보 */
+            padding: 1rem;
         }
         .screen { display: none; }
         .active-screen { display: block; }
@@ -87,7 +93,9 @@
         #emergency-message-container p {
             opacity: 0;
             animation: fadeIn 1.5s forwards;
-            word-break: keep-all; /* 단어 중간에 줄바꿈 방지 */
+            /* 긴 단어가 화면을 벗어나는 것을 방지 */
+            overflow-wrap: break-word;
+            word-break: keep-all; 
         }
         @keyframes fadeIn {
             to { opacity: 1; }
@@ -101,8 +109,9 @@
         }
     </style>
 </head>
-<body class="p-0 sm:p-2 md:p-4">
+<body class="p-0">
 
+    <!-- 음악 재생을 위한 오디오 태그 -->
     <audio id="background-music" loop>
         <source src="u are in danger.mp3" type="audio/mpeg">
         이 브라우저는 오디오 요소를 지원하지 않습니다.
@@ -111,6 +120,7 @@
     <div id="app-wrapper">
         <div id="app-container" class="w-full max-w-7xl mx-auto bg-[#172a46] bg-opacity-80 backdrop-blur-sm rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
 
+            <!-- Screen 1: Intro -->
             <div id="intro-screen" class="screen active-screen text-center">
                 <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">달에서 길을 잃다</h1>
                 <p class="text-base sm:text-lg md:text-xl text-slate-300 mb-6 max-w-2xl mx-auto">
@@ -126,7 +136,8 @@
                     <div>
                         <label for="studentNumberInput" class="block mb-2 text-sm font-medium text-slate-300">번호를 선택하세요</label>
                         <select id="studentNumberInput" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5" required>
-                            </select>
+                            <!-- Options will be populated by JS -->
+                        </select>
                     </div>
                     <div>
                         <label for="studentNameInput" class="block mb-2 text-sm font-medium text-slate-300">이름을 입력하세요</label>
@@ -138,12 +149,13 @@
                         미션 시작
                     </button>
                     <button id="team-activity-btn" class="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
-                        모둠활동
+                        수업 버전
                     </button>
                 </div>
                 <p class="text-xs text-slate-500 mt-8">made by.핑키네</p>
             </div>
             
+            <!-- Screen 2: Role Selection -->
             <div id="role-screen" class="screen">
                 <h2 class="text-2xl sm:text-3xl font-bold text-center mb-6">당신의 전문 분야를 선택하세요</h2>
                 <p class="text-center text-slate-300 mb-8">선택한 역할에 따라 특별한 전문 지식을 얻게 됩니다.</p>
@@ -171,10 +183,12 @@
                 </div>
             </div>
             
+            <!-- Screen 3: Knowledge Briefing -->
             <div id="knowledge-screen" class="screen">
                 <h2 class="text-2xl sm:text-3xl font-bold text-center mb-2">전문 지식 브리핑</h2>
                 <div id="knowledge-list-container" class="mt-6">
-                    </div>
+                    <!-- Knowledge content will be injected here -->
+                </div>
                 <div class="text-center mt-8">
                     <button id="go-to-ranking-btn" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
                         물품 순위 정하기
@@ -182,6 +196,7 @@
                 </div>
             </div>
 
+            <!-- Screen 4: Main Ranking Activity -->
             <div id="main-screen" class="screen">
                 <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                     <h2 class="text-2xl sm:text-3xl font-bold text-center flex-grow">생존 물품 우선순위 정하기</h2>
@@ -190,7 +205,8 @@
                     </button>
                 </div>
                 <div id="rank-list" class="w-full bg-slate-800 p-4 rounded-lg min-h-[60vh] space-y-3 max-h-[65vh] overflow-y-auto">
-                   </div>
+                   <!-- Ranking slots will be generated here -->
+                </div>
                  <div class="text-center mt-8">
                       <button id="finish-button" class="bg-green-600 hover:bg-green-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>
                           결과 보고서 만들기 <span id="finish-button-counter">(0/15)</span>
@@ -198,41 +214,50 @@
                  </div>
             </div>
             
+            <!-- Screen 5: Final Report -->
             <div id="report-screen" class="screen">
-                 <div id="report-content" class="p-2">
+                 <div id="report-content" class="p-2 sm:p-4">
                      <h2 class="text-2xl sm:text-3xl font-bold text-center mb-4">나의 달 생존 보고서</h2>
-                     <p class="text-center text-slate-300 mb-8">
-                         소속: <span id="final-group-name" class="font-bold text-cyan-400"></span> / 
-                         <span id="final-student-number" class="font-bold text-cyan-400"></span>번 
-                         <span id="final-student-name" class="font-bold text-cyan-400"></span> / 
-                         전문 분야: <span id="final-role" class="font-bold text-orange-400"></span>
-                     </p>
+                     <!-- 수정된 부분: 사용자 정보 표시 영역 -->
+                     <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-slate-300 mb-8">
+                         <span>소속: <span id="final-group-name" class="font-bold text-cyan-400"></span></span>
+                         <span class="hidden sm:inline">/</span>
+                         <span><span id="final-student-number" class="font-bold text-cyan-400"></span>번 <span id="final-student-name" class="font-bold text-cyan-400"></span></span>
+                         <span class="hidden sm:inline">/</span>
+                         <span>전문 분야: <span id="final-role" class="font-bold text-orange-400"></span></span>
+                     </div>
                      <div id="score-summary" class="text-center mb-6 bg-slate-900/50 p-4 rounded-lg">
-                         </div>
+                         <!-- Score and evaluation will be injected here -->
+                     </div>
                      <div id="final-list" class="space-y-3 bg-slate-800 p-4 sm:p-6 rounded-lg max-h-[55vh] overflow-y-auto">
-                         </div>
+                         <!-- Final report will be generated here -->
+                     </div>
                  </div>
-                <div class="text-center mt-8 space-y-3 sm:space-y-0 sm:space-x-4">
+                <!-- 수정된 부분: 결과 저장/공유 버튼 영역 -->
+                <div class="text-center mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                     <button id="open-save-share-modal-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
                         결과 저장하기
                     </button>
-                     <a href="https://pinkylucky.tistory.com/2" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-block bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition">
-                         NASA 전문가 해설
-                     </a>
+                    <a href="https://pinkylucky.tistory.com/2" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-block bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition">
+                        NASA 전문가 해설
+                    </a>
                 </div>
             </div>
         </div>
     </div>
     
+    <!-- Screen 1.5: Emergency Sequence -->
     <div id="emergency-screen" class="flex flex-col items-center justify-center p-8">
-        <div id="emergency-message-container" class="text-white text-xl sm:text-2xl md:text-3xl font-bold text-center space-y-6">
-            </div>
+        <div id="emergency-message-container" class="text-white text-lg sm:text-xl md:text-3xl font-bold text-center space-y-6">
+            <!-- Messages will be injected here -->
+        </div>
         <button id="skip-emergency-btn" class="absolute top-5 right-5 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg z-10">SKIP</button>
         <button id="proceed-to-roles-btn" class="mt-8 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-lg hidden transition-opacity animate-pulse">
             전문 분야 선택하기
         </button>
     </div>
 
+    <!-- Modals and Global Buttons -->
     <div id="global-buttons" class="fixed bottom-4 right-4 flex flex-col space-y-3 z-50 pointer-events-none">
         <button id="back-to-start-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12 w-12 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto">🏠</button>
         <button id="fullscreen-toggle" class="bg-gray-600 hover:bg-gray-700 text-white font-bold h-12 w-12 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 pointer-events-auto">
@@ -242,6 +267,7 @@
         <button id="exit-app-btn" class="bg-red-800 hover:bg-red-700 text-white font-bold h-12 w-12 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto">❌</button>
     </div>
     
+    <!-- Item Info Modal -->
     <div id="item-info-modal" class="modal-base">
         <div class="modal-content bg-slate-800 rounded-lg border border-slate-600">
             <span class="close-modal-btn absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
@@ -249,6 +275,7 @@
         </div>
     </div>
     
+    <!-- Item Selection Modal -->
     <div id="item-selection-modal" class="modal-base">
         <div class="modal-content bg-slate-800 rounded-lg border border-slate-600">
              <span class="close-modal-btn absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
@@ -257,6 +284,7 @@
         </div>
     </div>
 
+    <!-- Save/Share Modal -->
     <div id="save-share-modal" class="modal-base">
         <div class="modal-content bg-slate-800 rounded-lg border border-slate-600 text-center">
             <span class="close-modal-btn absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
@@ -268,6 +296,7 @@
         </div>
     </div>
 
+    <!-- Knowledge Modal -->
     <div id="knowledge-modal" class="modal-base">
         <div class="modal-content bg-slate-800 rounded-lg border border-slate-600">
             <span class="close-modal-btn absolute top-4 right-5 text-3xl font-bold cursor-pointer hover:text-red-500">&times;</span>
@@ -275,6 +304,7 @@
         </div>
     </div>
 
+    <!-- Resume Modal -->
     <div id="resume-modal" class="modal-base">
         <div class="modal-content bg-slate-800 rounded-lg border border-slate-600 text-center max-w-md">
             <div class="mb-4">
@@ -290,6 +320,7 @@
         </div>
     </div>
 
+    <!-- General Alert/Confirm Modal -->
     <div id="alert-confirm-modal" class="modal-base">
         <div class="modal-content bg-slate-800 rounded-lg border border-slate-600 text-center max-w-md">
             <h3 id="alert-confirm-title" class="text-xl font-bold mb-4 text-yellow-300"></h3>
@@ -317,7 +348,7 @@
                 { id: 15, name: '성냥이 들어있는 상자', nasaRank: 15, icon: '📦', description: '마찰을 통해 불을 붙이는 도구인 성냥이 들어있는 상자입니다.' },
                 { id: 6, name: '15m 길이의 나일론 끈', nasaRank: 6, icon: '🧶', description: '길고 튼튼한 나일론 소재의 끈입니다.' },
                 { id: 2, name: '물 (20L)', nasaRank: 2, icon: '💧', description: '마실 수 있는 깨끗한 물이 20리터 담긴 통입니다.' },
-                { id: 10, name: '신호용 조명탄', nasaRank: 10, icon: '🧨', description: '내장된 산화제 덕분에 산소 없이도 타면서 밝은 빛을 내는 신호용 폭죽입니다. (산화제: 다른 물질이 잘 타도록 돕는 물질)' },
+                { id: 10, name: '신호용 조명탄', nasaRank: 10, icon: '🧨', description: '내장된 산화제 덕분에 산소 없이도 타면서 밝은 빛을 내는 신호용 신호탄입니다. (산화제: 다른 물질이 잘 타도록 돕는 물질)' },
                 { id: 8, name: '낙하산 천', nasaRank: 8, icon: '🪂', description: '공기 저항을 이용하기 위한 크고 질긴 천입니다.' },
                 { id: 1, name: '산소통 45kg (2정)', nasaRank: 1, icon: '💨', description: '호흡에 필요한 산소가 압축되어 들어있는 금속 용기 2개입니다.' },
                 { id: 13, name: '분유 한 상자', nasaRank: 12, icon: '🍼', description: '아기에게 영양을 공급하기 위한 분말 형태의 우유입니다.' },
@@ -576,7 +607,7 @@
                             <span class="drag-handle">⠿</span>
                             <div class="flex-1 min-w-0 font-bold text-lg text-orange-400 flex items-center pointer-events-none">
                                 <span class="rank-number mr-2">${index + 1}위.</span>
-                                <span>${item.icon} ${item.name}</span>
+                                <span class="truncate">${item.icon} ${item.name}</span>
                             </div>
                             <button data-info-id="${item.id}" class="text-xs bg-sky-600 hover:bg-sky-500 text-white py-1 px-2 rounded ml-auto flex-shrink-0">정보</button>
                             <button data-clear-slot="${index}" class="text-xs bg-red-600 hover:bg-red-500 text-white py-1 px-2 rounded flex-shrink-0">X</button>
@@ -636,7 +667,7 @@
                 reportItem.innerHTML = `
                     <div>
                         <p class="font-bold text-lg">${userRank}위. ${item.icon} ${item.name}</p>
-                        <p class="text-sm text-slate-300 mt-2 pl-4">이유: ${itemData.reason || '작성하지 않음'}</p>
+                        <p class="text-sm text-slate-300 mt-2 pl-4 break-words">이유: ${itemData.reason || '작성하지 않음'}</p>
                     </div>
                 `;
                 dom.finalList.appendChild(reportItem);
@@ -652,7 +683,7 @@
             
             dom.scoreSummary.innerHTML = `
                 <p class="text-xl font-bold">총점: <span class="text-red-400">${totalScore}점</span> (낮을수록 생존 확률이 높습니다)</p>
-                <p class="text-2xl font-bold mt-2 text-yellow-300">"${evaluation} (${eng_eval})"</p>
+                <p class="text-2xl font-bold mt-2 text-yellow-300 break-words">"${evaluation} (${eng_eval})"</p>
             `;
             
             showScreen('report-screen');
@@ -779,10 +810,11 @@
                 else if (target.id === 'back-to-start-btn') showConfirm('지금까지의 진행 상황이 모두 사라집니다. 정말 처음으로 돌아가시겠습니까?', restart, '처음으로 돌아가기');
                 else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까?', () => { window.open('', '_self').close(); }, '종료');
                 else if (target.id === 'team-activity-btn') {
+                    // ==================>>   여기가 수정되었습니다!   <<==================
                     showConfirm(
-                        '학교 수업 시간의 모둠활동이 아니라면 부적절한 모드입니다. 계속하시겠습니까?', 
+                        '학교 수업 시간 버전입니다. 일반 사용자가 이용시 불편할 수 있습니다. 계속하시겠습니까?', 
                         () => { window.open('https://moon-survival-for-class.pages.dev', '_blank'); },
-                        '모둠활동 주의사항'
+                        '수업 버전 안내'
                     );
                 }
                 else if (target.id === 'open-save-share-modal-btn') openModal(dom.saveShareModalEl);
