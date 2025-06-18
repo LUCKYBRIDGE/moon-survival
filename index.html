@@ -32,7 +32,6 @@
             align-items: center;
             justify-content: center;
             overflow-y: auto;
-            /* 작은 화면에서의 좌우 여백 확보 */
             padding: 1rem;
         }
         .screen { display: none; }
@@ -93,7 +92,6 @@
         #emergency-message-container p {
             opacity: 0;
             animation: fadeIn 1.5s forwards;
-            /* 긴 단어가 화면을 벗어나는 것을 방지 */
             overflow-wrap: break-word;
             word-break: keep-all; 
         }
@@ -153,6 +151,43 @@
                     </button>
                 </div>
                 <p class="text-xs text-slate-500 mt-8">made by.핑키네</p>
+            </div>
+
+            <!-- Screen 1.7: Activity Guide -->
+            <div id="guide-screen" class="screen">
+                <div class="text-center">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-white mb-6">활동 안내</h2>
+                    <div class="max-w-2xl mx-auto space-y-6 bg-slate-800/50 p-6 rounded-lg text-left">
+                        <div>
+                            <h3 class="text-xl sm:text-2xl font-bold text-cyan-400 mb-2">💯 점수 계산 방법</h3>
+                            <p class="text-base sm:text-lg text-slate-300 leading-relaxed">
+                                최종 점수는 NASA 전문가가 정한 순위와 여러분이 정한 순위의 차이를 모두 합산하여 계산됩니다.
+                                <br>
+                                (예: NASA 1위, 내 순위 3위 → 2점 / NASA 8위, 내 순위 2위 → 6점)
+                                <br>
+                                (총 점수: 2+6 = 8점)
+                                <br><br>
+                                <strong class="text-yellow-300">점수가 낮을수록 생존 확률이 높습니다!</strong>
+                            </p>
+                        </div>
+                        <hr class="border-slate-700">
+                        <div>
+                            <h3 class="text-xl sm:text-2xl font-bold text-cyan-400 mb-2">✍️ 이유 작성 안내</h3>
+                            <p class="text-base sm:text-lg text-slate-300 leading-relaxed">
+                                각 물품의 순위를 정한 '이유'를 작성하는 것은 <strong class="text-yellow-300">필수 사항이 아닙니다.</strong>
+                                <br>
+                                하지만 이유를 작성하면 나중에 보고서를 볼 때 자신의 생각을 더 명확하게 되돌아볼 수 있습니다.
+                                <br><br>
+                                <span class="text-lime-400 font-semibold">만약 학생으로 수업에 참여하시는 것이라면, '이유' 작성을 꼭 해주세요.</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <button id="go-to-role-selection-btn" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                            전문 분야 선택하기
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <!-- Screen 2: Role Selection -->
@@ -218,7 +253,6 @@
             <div id="report-screen" class="screen">
                  <div id="report-content" class="p-2 sm:p-4">
                      <h2 class="text-2xl sm:text-3xl font-bold text-center mb-4">나의 달 생존 보고서</h2>
-                     <!-- 수정된 부분: 사용자 정보 표시 영역 -->
                      <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-slate-300 mb-8">
                          <span>소속: <span id="final-group-name" class="font-bold text-cyan-400"></span></span>
                          <span class="hidden sm:inline">/</span>
@@ -233,7 +267,6 @@
                          <!-- Final report will be generated here -->
                      </div>
                  </div>
-                <!-- 수정된 부분: 결과 저장/공유 버튼 영역 -->
                 <div class="text-center mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                     <button id="open-save-share-modal-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
                         결과 저장하기
@@ -252,10 +285,11 @@
             <!-- Messages will be injected here -->
         </div>
         <button id="skip-emergency-btn" class="absolute top-5 right-5 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg z-10">SKIP</button>
-        <button id="proceed-to-roles-btn" class="mt-8 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-lg hidden transition-opacity animate-pulse">
-            전문 분야 선택하기
+        <button id="proceed-to-guide-btn" class="mt-8 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-lg hidden transition-opacity animate-pulse">
+            활동 안내 확인하기
         </button>
     </div>
+
 
     <!-- Modals and Global Buttons -->
     <div id="global-buttons" class="fixed bottom-4 right-4 flex flex-col space-y-3 z-50 pointer-events-none">
@@ -332,6 +366,8 @@
     <script>
     (function() {
         let emergencySequenceTimeoutId = null; 
+        let skipButtonTimeoutId = null; 
+
         const appData = {
             getEmergencyMessages: () => [
                 "치직... 치지직...", `여기는 통제실, 응답하라 '${appData.state.groupName || '대원'}' 1호!`, "알 수 없는 충격으로 선체 손상 확인.",
@@ -381,7 +417,7 @@
             alertConfirmButtons: document.getElementById('alert-confirm-buttons'),
             emergencyScreen: document.getElementById('emergency-screen'),
             emergencyMessageContainer: document.getElementById('emergency-message-container'),
-            proceedToRolesBtn: document.getElementById('proceed-to-roles-btn'),
+            proceedToGuideBtn: document.getElementById('proceed-to-guide-btn'),
             skipEmergencyBtn: document.getElementById('skip-emergency-btn'),
             groupNameInput: document.getElementById('groupNameInput'),
             studentNumberInput: document.getElementById('studentNumberInput'),
@@ -452,15 +488,21 @@
             
             const messages = appData.getEmergencyMessages();
             dom.emergencyMessageContainer.innerHTML = '';
-            dom.proceedToRolesBtn.classList.add('hidden');
-            dom.skipEmergencyBtn.classList.remove('hidden');
+            dom.proceedToGuideBtn.classList.add('hidden');
+            dom.skipEmergencyBtn.classList.add('hidden'); 
+
+            if(skipButtonTimeoutId) clearTimeout(skipButtonTimeoutId);
+            skipButtonTimeoutId = setTimeout(() => {
+                dom.skipEmergencyBtn.classList.remove('hidden');
+            }, 2000);
 
             let messageIndex = 0;
             const showNextMessage = () => {
                 if (emergencySequenceTimeoutId) clearTimeout(emergencySequenceTimeoutId);
                 if (messageIndex >= messages.length) {
+                    if(skipButtonTimeoutId) clearTimeout(skipButtonTimeoutId);
                     dom.skipEmergencyBtn.classList.add('hidden');
-                    dom.proceedToRolesBtn.classList.remove('hidden');
+                    dom.proceedToGuideBtn.classList.remove('hidden');
                     return;
                 }
                 const p = document.createElement('p');
@@ -474,34 +516,37 @@
         
         const skipEmergencySequence = () => {
             if (emergencySequenceTimeoutId) clearTimeout(emergencySequenceTimeoutId);
+            if (skipButtonTimeoutId) clearTimeout(skipButtonTimeoutId);
+            
             const messages = appData.getEmergencyMessages();
             dom.emergencyMessageContainer.innerHTML = messages
                 .map(msg => `<p style="animation: none; opacity: 1;">${msg}</p>`).join('');
             dom.skipEmergencyBtn.classList.add('hidden');
-            dom.proceedToRolesBtn.classList.remove('hidden');
+            dom.proceedToGuideBtn.classList.remove('hidden');
         };
 
         const showScreen = (screenId) => {
             if (screenId !== 'emergency-screen') {
                 stopMusic();
+                if (skipButtonTimeoutId) clearTimeout(skipButtonTimeoutId);
             }
 
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
             dom.emergencyScreen.style.display = 'none';
 
             const activeScreen = document.getElementById(screenId);
-            dom.fullscreenToggle.classList.remove('hidden');
-
             if (screenId === 'emergency-screen') {
                 dom.emergencyScreen.style.display = 'flex';
                 dom.backToStartBtn.classList.add('hidden');
                 dom.exitAppBtn.classList.add('hidden');
                 dom.fullscreenToggle.classList.add('hidden');
-            } else {
+            } else if (activeScreen) {
                 activeScreen.classList.add('active-screen');
+                dom.fullscreenToggle.classList.remove('hidden');
                 dom.backToStartBtn.classList.toggle('hidden', screenId === 'intro-screen');
                 dom.exitAppBtn.classList.toggle('hidden', screenId === 'intro-screen');
             }
+            
             appData.state.currentScreen = screenId;
             if (screenId !== 'intro-screen' && screenId !== 'emergency-screen') autoSave();
         };
@@ -775,8 +820,13 @@
                 dom.groupNameInput.value = appData.state.groupName || '';
                 dom.studentNumberInput.value = appData.state.studentNumber || '';
                 dom.studentNameInput.value = appData.state.studentName || '';
-                const screenToRestore = appData.state.currentScreen === 'emergency-screen' ? 'role-screen' : appData.state.currentScreen;
+
+                let screenToRestore = appData.state.currentScreen;
+                if (screenToRestore === 'emergency-screen') {
+                    screenToRestore = 'guide-screen';
+                }
                 showScreen(screenToRestore || 'intro-screen');
+
                 if (screenToRestore === 'main-screen') renderRankingSlots();
                 return true;
             } catch (e) {
@@ -802,7 +852,8 @@
 
                 if (target.id === 'start-mission-btn') startMission();
                 else if (target.id === 'skip-emergency-btn') skipEmergencySequence();
-                else if (target.id === 'proceed-to-roles-btn') showScreen('role-screen');
+                else if (target.id === 'proceed-to-guide-btn') showScreen('guide-screen');
+                else if (target.id === 'go-to-role-selection-btn') showScreen('role-screen');
                 else if (roleCard) selectRole(roleCard.dataset.role);
                 else if (target.id === 'go-to-ranking-btn') { showScreen('main-screen'); renderRankingSlots(); }
                 else if (target.id === 'finish-button') generateReport();
@@ -810,7 +861,6 @@
                 else if (target.id === 'back-to-start-btn') showConfirm('지금까지의 진행 상황이 모두 사라집니다. 정말 처음으로 돌아가시겠습니까?', restart, '처음으로 돌아가기');
                 else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까?', () => { window.open('', '_self').close(); }, '종료');
                 else if (target.id === 'team-activity-btn') {
-                    // ==================>>   여기가 수정되었습니다!   <<==================
                     showConfirm(
                         '학교 수업 시간 버전입니다. 일반 사용자가 이용시 불편할 수 있습니다. 계속하시겠습니까?', 
                         () => { window.open('https://moon-survival-for-class.pages.dev', '_blank'); },
