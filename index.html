@@ -8,34 +8,48 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!--
-        Copyright (c) 2025 [Pinky]
+        Copyright (c) 2025 핑키네(Pinky-ne) All rights reserved.
+
+        본 저작물은 '핑키네'에 저작권이 있습니다.
+        교육적 목적으로 자유롭게 사용하고 배포할 수 있습니다.
+        단, 상업적 이용이나 무단으로 수정 및 변경하는 것은 금지합니다.
+
         This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
-        You should have received a copy of the license along with this work. If not, see <http://creativecommons.org/licenses/by-nc-sa/4.0/>.
+        For more details, see <http://creativecommons.org/licenses/by-nc-sa/4.0/>.
     -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
-        html, body {
-            overscroll-behavior-y: contain;
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
+        /* Base styles for smooth scrolling and full height */
+        html {
+            scroll-behavior: smooth;
         }
         body {
             font-family: 'Noto Sans KR', sans-serif;
             background-color: #0a192f;
             color: #e6f1ff;
+            min-height: 100vh; /* Ensure body is at least the height of the viewport */
+            width: 100%;
         }
+        /* App wrapper for centering content */
         #app-wrapper {
             width: 100%;
-            height: 100%;
+            min-height: 100vh; /* Use min-height to allow content to expand */
             display: flex;
-            align-items: center;
+            align-items: center; /* Vertically center content when it's shorter than the screen */
             justify-content: center;
-            overflow-y: auto;
-            padding: 1rem;
+            padding: 1rem; /* Add padding for smaller screens */
         }
+        @media (min-width: 640px) {
+            #app-wrapper {
+                padding: 2rem; /* Increase padding for larger screens */
+            }
+        }
+
+        /* Screen visibility */
         .screen { display: none; }
         .active-screen { display: block; }
+
+        /* SortableJS styles */
         .drag-handle {
             cursor: grab;
             padding: 0.5rem;
@@ -45,6 +59,8 @@
             background: #4a5568;
             opacity: 0.5;
         }
+
+        /* Modal styles */
         .modal-base {
             position: fixed;
             z-index: 100;
@@ -79,6 +95,8 @@
         .modal-base.show .modal-content {
             transform: scale(1);
         }
+
+        /* Emergency screen styles */
         #emergency-screen {
             background-color: #000;
             position: fixed;
@@ -98,6 +116,8 @@
         @keyframes fadeIn {
             to { opacity: 1; }
         }
+
+        /* Ranking slot styles */
         .rank-slot.empty {
             cursor: pointer;
             border-style: dashed;
@@ -105,14 +125,26 @@
         .rank-slot.empty:hover {
             background-color: #334155;
         }
+
+        /* Role and result image styles */
+        .role-card img {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1rem;
+            object-fit: contain;
+        }
+        #result-image-container img {
+            max-width: 150px;
+            margin: 1rem auto;
+        }
     </style>
 </head>
 <body class="p-0">
 
-    <!-- 음악 재생을 위한 오디오 태그 -->
+    <!-- Music player -->
     <audio id="background-music" loop>
         <source src="u are in danger.mp3" type="audio/mpeg">
-        이 브라우저는 오디오 요소를 지원하지 않습니다.
+        Your browser does not support the audio element.
     </audio>
 
     <div id="app-wrapper">
@@ -189,35 +221,43 @@
                     </div>
                 </div>
             </div>
-            
+           
             <!-- Screen 2: Role Selection -->
             <div id="role-screen" class="screen">
                 <h2 class="text-2xl sm:text-3xl font-bold text-center mb-6">당신의 전문 분야를 선택하세요</h2>
                 <p class="text-center text-slate-300 mb-8">선택한 역할에 따라 특별한 전문 지식을 얻게 됩니다.</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    <div data-role="scientist" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
-                        <div class="text-5xl sm:text-6xl mb-4">🔬</div>
-                        <h3 class="text-xl sm:text-2xl font-bold">우주과학자</h3>
-                        <p class="text-slate-400 text-sm sm:text-base">달의 환경과 물리 법칙에 대해 깊이 이해하고 있습니다.</p>
+                    <div data-role="scientist" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
+                        <div>
+                            <img src="role_scientist.png" alt="우주과학자" onerror="this.style.display='none'; this.nextElementSibling.textContent='🔬'">
+                            <h3 class="text-xl sm:text-2xl font-bold">우주과학자</h3>
+                        </div>
+                        <p class="text-slate-400 text-sm sm:text-base mt-2">달의 환경과 물리 법칙에 대해 깊이 이해하고 있습니다.</p>
                     </div>
-                    <div data-role="explorer" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
-                        <div class="text-5xl sm:text-6xl mb-4">🧭</div>
-                        <h3 class="text-xl sm:text-2xl font-bold">탐험가</h3>
-                        <p class="text-slate-400 text-sm sm:text-base">험난한 지형을 돌파하고 길을 찾는 데 능숙합니다.</p>
+                    <div data-role="explorer" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
+                        <div>
+                            <img src="role_explorer.png" alt="탐험가" onerror="this.style.display='none'; this.nextElementSibling.textContent='🧭'">
+                            <h3 class="text-xl sm:text-2xl font-bold">탐험가</h3>
+                        </div>
+                        <p class="text-slate-400 text-sm sm:text-base mt-2">험난한 지형을 돌파하고 길을 찾는 데 능숙합니다.</p>
                     </div>
-                    <div data-role="communicator" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
-                        <div class="text-5xl sm:text-6xl mb-4">📡</div>
-                        <h3 class="text-xl sm:text-2xl font-bold">통신전문가</h3>
-                        <p class="text-slate-400 text-sm sm:text-base">장비를 활용해 구조 신호를 보내는 방법을 알고 있습니다.</p>
+                    <div data-role="communicator" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
+                        <div>
+                           <img src="role_communicator.png" alt="통신전문가" onerror="this.style.display='none'; this.nextElementSibling.textContent='📡'">
+                            <h3 class="text-xl sm:text-2xl font-bold">통신전문가</h3>
+                        </div>
+                        <p class="text-slate-400 text-sm sm:text-base mt-2">장비를 활용해 구조 신호를 보내는 방법을 알고 있습니다.</p>
                     </div>
-                    <div data-role="medic" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all">
-                        <div class="text-5xl sm:text-6xl mb-4">🩺</div>
-                        <h3 class="text-xl sm:text-2xl font-bold">의료진</h3>
-                        <p class="text-slate-400 text-sm sm:text-base">극한 상황에서 생명을 유지하는 방법을 알고 있습니다.</p>
+                    <div data-role="medic" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
+                        <div>
+                            <img src="role_medic.png" alt="의료진" onerror="this.style.display='none'; this.nextElementSibling.textContent='🩺'">
+                            <h3 class="text-xl sm:text-2xl font-bold">의료진</h3>
+                        </div>
+                        <p class="text-slate-400 text-sm sm:text-base mt-2">극한 상황에서 생명을 유지하는 방법을 알고 있습니다.</p>
                     </div>
                 </div>
             </div>
-            
+           
             <!-- Screen 3: Knowledge Briefing -->
             <div id="knowledge-screen" class="screen">
                 <h2 class="text-2xl sm:text-3xl font-bold text-center mb-2">전문 지식 브리핑</h2>
@@ -239,7 +279,7 @@
                         내 전문지식 보기 🧠
                     </button>
                 </div>
-                <div id="rank-list" class="w-full bg-slate-800 p-4 rounded-lg min-h-[60vh] space-y-3 max-h-[65vh] overflow-y-auto">
+                <div id="rank-list" class="w-full bg-slate-800 p-4 rounded-lg space-y-3 max-h-[65vh] overflow-y-auto">
                    <!-- Ranking slots will be generated here -->
                 </div>
                  <div class="text-center mt-8">
@@ -248,7 +288,7 @@
                       </button>
                  </div>
             </div>
-            
+           
             <!-- Screen 5: Final Report -->
             <div id="report-screen" class="screen">
                  <div id="report-content" class="p-2 sm:p-4">
@@ -267,18 +307,18 @@
                          <!-- Final report will be generated here -->
                      </div>
                  </div>
-                <div class="text-center mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                    <button id="open-save-share-modal-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
-                        결과 저장하기
-                    </button>
-                    <a href="https://pinkylucky.tistory.com/2" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-block bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition">
-                        NASA 전문가 해설
-                    </a>
-                </div>
+                 <div class="text-center mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                     <button id="open-save-share-modal-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                         결과 저장하기
+                     </button>
+                     <a href="https://pinkylucky.tistory.com/2" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-block bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition">
+                         NASA 전문가 해설
+                     </a>
+                 </div>
             </div>
         </div>
     </div>
-    
+   
     <!-- Screen 1.5: Emergency Sequence -->
     <div id="emergency-screen" class="flex flex-col items-center justify-center p-8">
         <div id="emergency-message-container" class="text-white text-lg sm:text-xl md:text-3xl font-bold text-center space-y-6">
@@ -300,7 +340,7 @@
         </button>
         <button id="exit-app-btn" class="bg-red-800 hover:bg-red-700 text-white font-bold h-12 w-12 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 hidden pointer-events-auto">❌</button>
     </div>
-    
+   
     <!-- Item Info Modal -->
     <div id="item-info-modal" class="modal-base">
         <div class="modal-content bg-slate-800 rounded-lg border border-slate-600">
@@ -308,7 +348,7 @@
             <div id="item-info-modal-body" class="text-white"></div>
         </div>
     </div>
-    
+   
     <!-- Item Selection Modal -->
     <div id="item-selection-modal" class="modal-base">
         <div class="modal-content bg-slate-800 rounded-lg border border-slate-600">
@@ -439,8 +479,8 @@
             backgroundMusic: document.getElementById('background-music'),
         };
 
-        const SAVE_KEY = 'pinky-moon-survival-save-v5.6';
-        
+        const SAVE_KEY = 'pinky-moon-survival-save-v5.7'; // Version updated for new structure if needed
+       
         const playMusic = () => {
             if (dom.backgroundMusic) {
                 dom.backgroundMusic.play().catch(error => console.log("Music autoplay blocked by browser. User interaction needed."));
@@ -456,8 +496,8 @@
 
         const resetState = () => {
              appData.state = {
-                 currentScreen: 'intro-screen', groupName: '', studentName: '', studentNumber: '', selectedRole: null,
-                 rankedItems: Array(15).fill(null),
+                  currentScreen: 'intro-screen', groupName: '', studentName: '', studentNumber: '', selectedRole: null,
+                  rankedItems: Array(15).fill(null),
              };
         };
 
@@ -481,11 +521,11 @@
             openModal(dom.alertConfirmModalEl);
             dom.alertConfirmModalEl.querySelector('.modal-ok-btn').onclick = () => { closeModal(dom.alertConfirmModalEl); onConfirm(); };
         };
-        
+       
         const showEmergencySequence = () => {
             showScreen('emergency-screen');
             playMusic();
-            
+           
             const messages = appData.getEmergencyMessages();
             dom.emergencyMessageContainer.innerHTML = '';
             dom.proceedToGuideBtn.classList.add('hidden');
@@ -513,11 +553,11 @@
             };
             showNextMessage();
         };
-        
+       
         const skipEmergencySequence = () => {
             if (emergencySequenceTimeoutId) clearTimeout(emergencySequenceTimeoutId);
             if (skipButtonTimeoutId) clearTimeout(skipButtonTimeoutId);
-            
+           
             const messages = appData.getEmergencyMessages();
             dom.emergencyMessageContainer.innerHTML = messages
                 .map(msg => `<p style="animation: none; opacity: 1;">${msg}</p>`).join('');
@@ -546,7 +586,7 @@
                 dom.backToStartBtn.classList.toggle('hidden', screenId === 'intro-screen');
                 dom.exitAppBtn.classList.toggle('hidden', screenId === 'intro-screen');
             }
-            
+           
             appData.state.currentScreen = screenId;
             if (screenId !== 'intro-screen' && screenId !== 'emergency-screen') autoSave();
         };
@@ -562,7 +602,7 @@
             saveState();
             showEmergencySequence();
         };
-        
+       
         const populateKnowledgeContainer = (container) => {
             const role = appData.roles[appData.state.selectedRole];
             if (!role) return;
@@ -571,7 +611,7 @@
 
             const contentWrapper = document.createElement('div');
             contentWrapper.className = "bg-slate-800 p-4 sm:p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-300 max-h-[60vh] overflow-y-auto";
-            
+           
             const roleKnowledgeTitle = document.createElement('h4');
             roleKnowledgeTitle.className = "text-lg font-bold text-orange-300 mt-4 md:col-span-2";
             roleKnowledgeTitle.textContent = "🚀 전문 지식";
@@ -601,7 +641,7 @@
             });
             container.appendChild(contentWrapper);
         };
-        
+       
         const selectRole = (roleId, changeScreen = true) => {
             appData.state.selectedRole = roleId;
             if (changeScreen) {
@@ -611,21 +651,21 @@
                 autoSave();
             }
         };
-        
+       
         const openKnowledgeModal = () => {
             if (!appData.state.selectedRole) return;
             dom.knowledgeModalBodyEl.innerHTML = '';
-            
+           
             const title = document.createElement('h3');
             title.className = "text-2xl font-bold mb-4 text-center";
             title.textContent = "정보 다시보기";
 
             const container = document.createElement('div');
             container.id = 'knowledge-list-modal-content';
-            
+           
             dom.knowledgeModalBodyEl.appendChild(title);
             dom.knowledgeModalBodyEl.appendChild(container);
-            
+           
             populateKnowledgeContainer(container);
 
             openModal(dom.knowledgeModalEl);
@@ -636,7 +676,7 @@
             dom.finishButtonCounter.textContent = `(${itemCount}/15)`;
             dom.finishButton.disabled = (itemCount !== 15);
         };
-        
+       
         const renderRankingSlots = () => {
             dom.rankListEl.innerHTML = '';
             appData.state.rankedItems.forEach((itemData, index) => {
@@ -667,11 +707,11 @@
             });
             updateFinishButtonState();
         };
-        
+       
         const openItemSelectionModal = (slotIndex) => {
             const rankedItemIds = new Set(appData.state.rankedItems.filter(Boolean).map(item => item.id));
             const availableItems = appData.items.filter(item => !rankedItemIds.has(item.id));
-            
+           
             dom.itemSelectionModalBodyEl.innerHTML = '';
             if (availableItems.length === 0) {
                 dom.itemSelectionModalBodyEl.innerHTML = `<p class="text-center text-slate-400 col-span-full">모든 물품이 선택되었습니다.</p>`;
@@ -699,7 +739,7 @@
             dom.finalStudentNumber.textContent = appData.state.studentNumber;
             dom.finalRole.textContent = appData.roles[appData.state.selectedRole].name;
             dom.finalList.innerHTML = '';
-            
+           
             let totalScore = 0;
             appData.state.rankedItems.forEach((itemData, index) => {
                 const item = appData.items.find(i => i.id === itemData.id);
@@ -718,26 +758,29 @@
                 dom.finalList.appendChild(reportItem);
             });
 
-            let evaluation = '', eng_eval = '';
-            if (totalScore <= 25) { evaluation = 'NASA에서 연락옵니다. 당신은 외계인인가요?'; eng_eval = 'Excellent';}
-            else if (totalScore <= 32) { evaluation = '달 부동산 투자 추천! 당신은 이미 달 전문가입니다.'; eng_eval = 'Good';}
-            else if (totalScore <= 45) { evaluation = '아슬아슬... 지구에 갈 수 있겠죠?'; eng_eval = 'Average';}
-            else if (totalScore <= 55) { evaluation = '지구에 있는 가족... 생각나시나요?'; eng_eval = 'Fair';}
-            else if (totalScore <= 70) { evaluation = '혹시 하고 싶은 말이 있나요?'; eng_eval = 'Danger';}
-            else { evaluation = '그동안 함께해서 행복했어요.'; eng_eval = 'U dead';}
-            
+            let evaluation = '', resultImage = '';
+            if (totalScore <= 25) { evaluation = 'NASA에서 연락옵니다. 당신은 외계인인가요?'; resultImage = 'result_excellent.png';}
+            else if (totalScore <= 32) { evaluation = '달 부동산 투자 추천! 당신은 이미 달 전문가입니다.'; resultImage = 'result_good.png';}
+            else if (totalScore <= 45) { evaluation = '아슬아슬... 지구에 갈 수 있겠죠?'; resultImage = 'result_fair.png';}
+            else if (totalScore <= 55) { evaluation = '지구에 있는 가족... 생각나시나요?'; resultImage = 'result_fair.png';}
+            else if (totalScore <= 70) { evaluation = '혹시 하고 싶은 말이 있나요?'; resultImage = 'result_danger.png';}
+            else { evaluation = '그동안 함께해서 행복했어요.'; resultImage = 'result_udead.png';}
+           
             dom.scoreSummary.innerHTML = `
+                <div id="result-image-container">
+                    <img src="${resultImage}" alt="결과 등급 이미지" onerror="this.style.display='none'">
+                </div>
                 <p class="text-xl font-bold">총점: <span class="text-red-400">${totalScore}점</span> (낮을수록 생존 확률이 높습니다)</p>
-                <p class="text-2xl font-bold mt-2 text-yellow-300 break-words">"${evaluation} (${eng_eval})"</p>
+                <p class="text-2xl font-bold mt-2 text-yellow-300 break-words">"${evaluation}"</p>
             `;
-            
+           
             showScreen('report-screen');
         };
-        
+       
         const generateReportCanvas = () => {
             const reportContent = document.getElementById('report-content');
             const finalListEl = document.getElementById('final-list');
-            
+           
             finalListEl.style.maxHeight = 'none';
             finalListEl.style.overflow = 'visible';
 
@@ -746,13 +789,13 @@
                     backgroundColor: "#172a46",
                     onclone: (doc) => { doc.getElementById('report-content').style.color = '#e6f1ff'; }
                 }).then(canvas => {
-                    finalListEl.style.maxHeight = null;
-                    finalListEl.style.overflow = 'auto';
+                    finalListEl.style.maxHeight = ''; // Revert to CSS rule
+                    finalListEl.style.overflow = 'auto'; // Revert to CSS rule
                     resolve(canvas);
                 });
             });
         };
-        
+       
         const downloadReport = () => {
              generateReportCanvas().then(canvas => {
                 const link = document.createElement('a');
@@ -786,7 +829,7 @@
                     }
                 }, 'image/png');
             } catch (error) {
-                console.error('공유 기능 오류:', error);
+                console.error('Share error:', error);
                 showAlert('이미지를 공유하는 중 오류가 발생했습니다.', '오류');
             }
         };
@@ -796,14 +839,16 @@
         const saveState = () => {
             try {
                 if (appData.state.currentScreen === 'intro-screen' || appData.state.currentScreen === 'emergency-screen') return;
-                appData.state.rankedItems.forEach((itemData, index) => {
-                    if (itemData) {
-                        const textarea = dom.rankListEl.querySelector(`[data-reason-for-item="${itemData.id}"]`);
-                        if (textarea) appData.state.rankedItems[index].reason = textarea.value;
-                    }
-                });
-                localStorage.setItem(SAVE_KEY, JSON.stringify({ ...appData.state, version: '5.6' }));
-            } catch (e) { console.error("저장 중 오류:", e); }
+                if (appData.state.currentScreen === 'main-screen') {
+                    appData.state.rankedItems.forEach((itemData, index) => {
+                        if (itemData) {
+                            const textarea = dom.rankListEl.querySelector(`[data-reason-for-item="${itemData.id}"]`);
+                            if (textarea) appData.state.rankedItems[index].reason = textarea.value;
+                        }
+                    });
+                }
+                localStorage.setItem(SAVE_KEY, JSON.stringify({ ...appData.state, version: '5.7' }));
+            } catch (e) { console.error("Save error:", e); }
         };
         const autoSave = () => saveState();
 
@@ -812,7 +857,7 @@
                 const savedStateJSON = localStorage.getItem(SAVE_KEY);
                 if (!savedStateJSON) return false;
                 const savedState = JSON.parse(savedStateJSON);
-                if (!savedState.version || savedState.version < '5.6') {
+                if (!savedState.version || savedState.version < '5.7') { // Check version
                     localStorage.removeItem(SAVE_KEY);
                     return false;
                 }
@@ -828,6 +873,9 @@
                 showScreen(screenToRestore || 'intro-screen');
 
                 if (screenToRestore === 'main-screen') renderRankingSlots();
+                else if (screenToRestore === 'report-screen') generateReport();
+                else if (screenToRestore === 'knowledge-screen') populateKnowledgeContainer(dom.knowledgeListContainer);
+
                 return true;
             } catch (e) {
                 localStorage.removeItem(SAVE_KEY);
@@ -836,7 +884,7 @@
         };
 
         const hasSavedData = () => !!localStorage.getItem(SAVE_KEY);
-        
+       
         const initialize = () => {
             for (let i = 1; i <= 40; i++) {
                 const opt = document.createElement('option');
@@ -886,10 +934,10 @@
                     autoSave();
                 } else if (target.closest('#fullscreen-toggle')) {
                      if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen().catch(e => console.error(e));
-                    } else {
-                        document.exitFullscreen().catch(e => console.error(e));
-                    }
+                         document.documentElement.requestFullscreen().catch(e => console.error(e));
+                     } else {
+                         document.exitFullscreen().catch(e => console.error(e));
+                     }
                 }
             });
 
@@ -928,7 +976,7 @@
                 `;
                 openModal(dom.resumeModalEl);
             }
-            
+           
             document.getElementById('resume-btn').onclick = () => {
                 if (restoreSession()) {
                     closeModal(dom.resumeModalEl);
@@ -949,7 +997,7 @@
             window.addEventListener('beforeunload', saveState);
             document.addEventListener('visibilitychange', () => { if (document.hidden) saveState(); });
         };
-        
+       
         initialize();
     })();
     </script>
