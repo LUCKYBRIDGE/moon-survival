@@ -229,28 +229,28 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     <div data-role="scientist" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
                         <div>
-                            <img src="role_scientist.png" alt="우주과학자" onerror="this.style.display='none'; this.nextElementSibling.textContent='🔬'">
+                            <img src="role_scientist.jpg" alt="우주과학자" onerror="this.style.display='none'; this.nextElementSibling.textContent='🔬'">
                             <h3 class="text-xl sm:text-2xl font-bold">우주과학자</h3>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base mt-2">달의 환경과 물리 법칙에 대해 깊이 이해하고 있습니다.</p>
                     </div>
                     <div data-role="explorer" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
                         <div>
-                            <img src="role_explorer.png" alt="탐험가" onerror="this.style.display='none'; this.nextElementSibling.textContent='🧭'">
+                            <img src="role_explorer.jpg" alt="탐험가" onerror="this.style.display='none'; this.nextElementSibling.textContent='🧭'">
                             <h3 class="text-xl sm:text-2xl font-bold">탐험가</h3>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base mt-2">험난한 지형을 돌파하고 길을 찾는 데 능숙합니다.</p>
                     </div>
                     <div data-role="communicator" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
                         <div>
-                           <img src="role_communicator.png" alt="통신전문가" onerror="this.style.display='none'; this.nextElementSibling.textContent='📡'">
+                           <img src="role_communicator.jpg" alt="통신전문가" onerror="this.style.display='none'; this.nextElementSibling.textContent='📡'">
                             <h3 class="text-xl sm:text-2xl font-bold">통신전문가</h3>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base mt-2">장비를 활용해 구조 신호를 보내는 방법을 알고 있습니다.</p>
                     </div>
                     <div data-role="medic" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
                         <div>
-                            <img src="role_medic.png" alt="의료진" onerror="this.style.display='none'; this.nextElementSibling.textContent='🩺'">
+                            <img src="role_medic.jpg" alt="의료진" onerror="this.style.display='none'; this.nextElementSibling.textContent='🩺'">
                             <h3 class="text-xl sm:text-2xl font-bold">의료진</h3>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base mt-2">극한 상황에서 생명을 유지하는 방법을 알고 있습니다.</p>
@@ -759,12 +759,12 @@
             });
 
             let evaluation = '', resultImage = '';
-            if (totalScore <= 25) { evaluation = 'NASA에서 연락옵니다. 당신은 외계인인가요?'; resultImage = 'result_excellent.png';}
-            else if (totalScore <= 32) { evaluation = '달 부동산 투자 추천! 당신은 이미 달 전문가입니다.'; resultImage = 'result_good.png';}
-            else if (totalScore <= 45) { evaluation = '아슬아슬... 지구에 갈 수 있겠죠?'; resultImage = 'result_fair.png';}
-            else if (totalScore <= 55) { evaluation = '지구에 있는 가족... 생각나시나요?'; resultImage = 'result_fair.png';}
-            else if (totalScore <= 70) { evaluation = '혹시 하고 싶은 말이 있나요?'; resultImage = 'result_danger.png';}
-            else { evaluation = '그동안 함께해서 행복했어요.'; resultImage = 'result_udead.png';}
+            if (totalScore <= 25) { evaluation = 'NASA에서 연락옵니다. 당신은 외계인인가요?'; resultImage = 'result_excellent.jpg';}
+            else if (totalScore <= 32) { evaluation = '달 부동산 투자 추천! 당신은 이미 달 전문가입니다.'; resultImage = 'result_good.jpg';}
+            else if (totalScore <= 45) { evaluation = '아슬아슬... 지구에 갈 수 있겠죠?'; resultImage = 'result_fair.jpg';}
+            else if (totalScore <= 55) { evaluation = '지구에 있는 가족... 생각나시나요?'; resultImage = 'result_fair.jpg';}
+            else if (totalScore <= 70) { evaluation = '혹시 하고 싶은 말이 있나요?'; resultImage = 'result_danger.jpg';}
+            else { evaluation = '그동안 함께해서 행복했어요.'; resultImage = 'result_udead.jpg';}
            
             dom.scoreSummary.innerHTML = `
                 <div id="result-image-container">
