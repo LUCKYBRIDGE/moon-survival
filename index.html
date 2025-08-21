@@ -240,28 +240,28 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     <div data-role="scientist" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
                         <div>
-                            <img src="https://raw.githubusercontent.com/Pinky-ne/Moon-Survival-Simulation/main/role_scientist.jpg" alt="우주과학자" onerror="this.style.display='none'; this.nextElementSibling.textContent='🔬'">
+                            <img src="https://raw.githubusercontent.com/Pinky-ne/Moon-Survival-Simulation/main/role_scientist.jpg" alt="우주과학자" onerror="this.onerror=null;this.src='https://placehold.co/100x100/1e293b/94a3b8?text=Image';">
                             <h3 class="text-xl sm:text-2xl font-bold">우주과학자</h3>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base mt-2">달의 환경과 물리 법칙에 대해 깊이 이해하고 있습니다.</p>
                     </div>
                     <div data-role="explorer" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
                         <div>
-                            <img src="https://raw.githubusercontent.com/Pinky-ne/Moon-Survival-Simulation/main/role_explorer.jpg" alt="탐험가" onerror="this.style.display='none'; this.nextElementSibling.textContent='🧭'">
+                            <img src="https://raw.githubusercontent.com/Pinky-ne/Moon-Survival-Simulation/main/role_explorer.jpg" alt="탐험가" onerror="this.onerror=null;this.src='https://placehold.co/100x100/1e293b/94a3b8?text=Image';">
                             <h3 class="text-xl sm:text-2xl font-bold">탐험가</h3>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base mt-2">험난한 지형을 돌파하고 길을 찾는 데 능숙합니다.</p>
                     </div>
                     <div data-role="communicator" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
                         <div>
-                           <img src="https://raw.githubusercontent.com/Pinky-ne/Moon-Survival-Simulation/main/role_communicator.jpg" alt="통신전문가" onerror="this.style.display='none'; this.nextElementSibling.textContent='📡'">
+                           <img src="https://raw.githubusercontent.com/Pinky-ne/Moon-Survival-Simulation/main/role_communicator.jpg" alt="통신전문가" onerror="this.onerror=null;this.src='https://placehold.co/100x100/1e293b/94a3b8?text=Image';">
                             <h3 class="text-xl sm:text-2xl font-bold">통신전문가</h3>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base mt-2">장비를 활용해 구조 신호를 보내는 방법을 알고 있습니다.</p>
                     </div>
                     <div data-role="medic" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
                         <div>
-                            <img src="https://raw.githubusercontent.com/Pinky-ne/Moon-Survival-Simulation/main/role_medic.jpg" alt="의료진" onerror="this.style.display='none'; this.nextElementSibling.textContent='🩺'">
+                            <img src="https://raw.githubusercontent.com/Pinky-ne/Moon-Survival-Simulation/main/role_medic.jpg" alt="의료진" onerror="this.onerror=null;this.src='https://placehold.co/100x100/1e293b/94a3b8?text=Image';">
                             <h3 class="text-xl sm:text-2xl font-bold">의료진</h3>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base mt-2">극한 상황에서 생명을 유지하는 방법을 알고 있습니다.</p>
@@ -293,7 +293,7 @@
                 <div class="bg-sky-900/50 text-sky-300 p-3 rounded-md text-sm text-center mb-4">
                     💡 <strong>전문 지식 활용 Tip:</strong> 전문 지식은 합리적인 결정을 돕는 참고 자료입니다. 언급된 물품이 반드시 정답은 아니므로, 종합적인 판단이 중요합니다.
                 </div>
-                <div id="rank-list" class="w-full bg-slate-800 p-4 rounded-lg space-y-3 max-h-[60vh] overflow-y-auto">
+                <div id="rank-list" class="w-full bg-slate-800 p-4 rounded-lg space-y-3 max-h-[65vh] overflow-y-auto">
                    <!-- Ranking slots will be generated here -->
                 </div>
                  <div class="text-center mt-8">
@@ -780,17 +780,18 @@
                 dom.finalList.appendChild(reportItem);
             });
 
+            const baseUrl = "https://raw.githubusercontent.com/Pinky-ne/Moon-Survival-Simulation/main/";
             let evaluation = '', resultImage = '';
-            if (totalScore <= 25) { evaluation = 'NASA에서 연락옵니다. 당신은 외계인인가요?'; resultImage = 'result_excellent.jpg';}
-            else if (totalScore <= 32) { evaluation = '달 부동산 투자 추천! 당신은 이미 달 전문가입니다.'; resultImage = 'result_good.jpg';}
-            else if (totalScore <= 45) { evaluation = '아슬아슬... 지구에 갈 수 있겠죠?'; resultImage = 'result_fair.jpg';}
-            else if (totalScore <= 55) { evaluation = '지구에 있는 가족... 생각나시나요?'; resultImage = 'result_fair.jpg';}
-            else if (totalScore <= 70) { evaluation = '혹시 하고 싶은 말이 있나요?'; resultImage = 'result_danger.jpg';}
-            else { evaluation = '그동안 함께해서 행복했어요.'; resultImage = 'result_udead.jpg';}
+            if (totalScore <= 25) { evaluation = 'NASA에서 연락옵니다. 당신은 외계인인가요?'; resultImage = baseUrl + 'result_excellent.jpg';}
+            else if (totalScore <= 32) { evaluation = '달 부동산 투자 추천! 당신은 이미 달 전문가입니다.'; resultImage = baseUrl + 'result_good.jpg';}
+            else if (totalScore <= 45) { evaluation = '아슬아슬... 지구에 갈 수 있겠죠?'; resultImage = baseUrl + 'result_fair.jpg';}
+            else if (totalScore <= 55) { evaluation = '지구에 있는 가족... 생각나시나요?'; resultImage = baseUrl + 'result_fair.jpg';}
+            else if (totalScore <= 70) { evaluation = '혹시 하고 싶은 말이 있나요?'; resultImage = baseUrl + 'result_danger.jpg';}
+            else { evaluation = '그동안 함께해서 행복했어요.'; resultImage = baseUrl + 'result_udead.jpg';}
             
             dom.scoreSummary.innerHTML = `
                 <div id="result-image-container">
-                    <img src="${resultImage}" alt="결과 등급 이미지" onerror="this.style.display='none'">
+                    <img src="${resultImage}" alt="결과 등급 이미지" onerror="this.onerror=null;this.src='https://placehold.co/150x150/1e293b/94a3b8?text=Result';">
                 </div>
                 <p class="text-xl font-bold">총점: <span class="text-red-400">${totalScore}점</span> (낮을수록 생존 확률이 높습니다)</p>
                 <p class="text-2xl font-bold mt-2 text-yellow-300 break-words">"${evaluation}"</p>
