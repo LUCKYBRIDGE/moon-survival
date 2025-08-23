@@ -182,7 +182,7 @@
                         수업 버전
                     </button>
                 </div>
-                <p class="text-xs text-slate-500 mt-8">made by.핑키네</p>
+                <p class="text-xs text-slate-500 mt-8">made by.<a href="https://blog.naver.com/pinkylucky7" target="_blank" rel="noopener noreferrer" class="underline hover:text-cyan-400">핑키네</a></p>
             </div>
 
             <!-- Screen 1.7: Activity Guide -->
@@ -240,28 +240,28 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     <div data-role="scientist" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
                         <div>
-                            <img src="role_scientist.jpg" alt="우주과학자">
+                            <img src="https://placehold.co/100x100/1e293b/ffffff?text=🔬" alt="우주과학자">
                             <h3 class="text-xl sm:text-2xl font-bold">우주과학자</h3>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base mt-2">달의 환경과 물리 법칙에 대해 깊이 이해하고 있습니다.</p>
                     </div>
                     <div data-role="explorer" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
                         <div>
-                            <img src="role_explorer.jpg" alt="탐험가">
+                            <img src="https://placehold.co/100x100/1e293b/ffffff?text=🧭" alt="탐험가">
                             <h3 class="text-xl sm:text-2xl font-bold">탐험가</h3>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base mt-2">험난한 지형을 돌파하고 길을 찾는 데 능숙합니다.</p>
                     </div>
                     <div data-role="communicator" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
                         <div>
-                           <img src="role_communicator.jpg" alt="통신전문가">
+                           <img src="https://placehold.co/100x100/1e293b/ffffff?text=📡" alt="통신전문가">
                             <h3 class="text-xl sm:text-2xl font-bold">통신전문가</h3>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base mt-2">장비를 활용해 구조 신호를 보내는 방법을 알고 있습니다.</p>
                     </div>
                     <div data-role="medic" class="role-card bg-slate-700 p-4 sm:p-6 rounded-lg text-center cursor-pointer hover:bg-slate-600 hover:scale-105 transition-all flex flex-col justify-between">
                         <div>
-                            <img src="role_medic.jpg" alt="의료진">
+                            <img src="https://placehold.co/100x100/1e293b/ffffff?text=⚕️" alt="의료진">
                             <h3 class="text-xl sm:text-2xl font-bold">의료진</h3>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base mt-2">극한 상황에서 생명을 유지하는 방법을 알고 있습니다.</p>
@@ -296,39 +296,39 @@
                 <div id="rank-list" class="w-full bg-slate-800 p-4 rounded-lg space-y-3 max-h-[65vh] overflow-y-auto">
                    <!-- Ranking slots will be generated here -->
                 </div>
-                 <div class="text-center mt-8">
-                      <button id="finish-button" class="bg-green-600 hover:bg-green-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>
-                          결과 보고서 만들기 <span id="finish-button-counter">(0/15)</span>
-                      </button>
-                 </div>
+                   <div class="text-center mt-8">
+                        <button id="finish-button" class="bg-green-600 hover:bg-green-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>
+                            결과 보고서 만들기 <span id="finish-button-counter">(0/15)</span>
+                        </button>
+                   </div>
             </div>
             
             <!-- Screen 5: Final Report -->
             <div id="report-screen" class="screen">
-                 <div id="report-content" class="p-2 sm:p-4">
-                     <h2 class="text-2xl sm:text-3xl font-bold text-center mb-4">나의 달 생존 보고서</h2>
-                     <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-slate-300 mb-8">
-                         <span>소속: <span id="final-group-name" class="font-bold text-cyan-400"></span></span>
-                         <span class="hidden sm:inline">/</span>
-                         <span><span id="final-student-number" class="font-bold text-cyan-400"></span>번 <span id="final-student-name" class="font-bold text-cyan-400"></span></span>
-                         <span class="hidden sm:inline">/</span>
-                         <span>전문 분야: <span id="final-role" class="font-bold text-orange-400"></span></span>
-                     </div>
-                     <div id="score-summary" class="text-center mb-6 bg-slate-900/50 p-4 rounded-lg">
-                         <!-- Score and evaluation will be injected here -->
-                     </div>
-                     <div id="final-list" class="space-y-3 bg-slate-800 p-4 sm:p-6 rounded-lg max-h-[55vh] overflow-y-auto">
-                         <!-- Final report will be generated here -->
-                     </div>
-                 </div>
-                 <div class="text-center mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                     <button id="open-save-share-modal-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
-                         결과 저장하기
-                     </button>
-                     <a href="https://pinkylucky.tistory.com/2" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-block bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition">
-                         NASA 전문가 해설
-                     </a>
-                 </div>
+                   <div id="report-content" class="p-2 sm:p-4">
+                        <h2 class="text-2xl sm:text-3xl font-bold text-center mb-4">나의 달 생존 보고서</h2>
+                        <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-slate-300 mb-8">
+                            <span>소속: <span id="final-group-name" class="font-bold text-cyan-400"></span></span>
+                            <span class="hidden sm:inline">/</span>
+                            <span><span id="final-student-number" class="font-bold text-cyan-400"></span>번 <span id="final-student-name" class="font-bold text-cyan-400"></span></span>
+                            <span class="hidden sm:inline">/</span>
+                            <span>전문 분야: <span id="final-role" class="font-bold text-orange-400"></span></span>
+                        </div>
+                        <div id="score-summary" class="text-center mb-6 bg-slate-900/50 p-4 rounded-lg">
+                            <!-- Score and evaluation will be injected here -->
+                        </div>
+                        <div id="final-list" class="space-y-3 bg-slate-800 p-4 sm:p-6 rounded-lg max-h-[55vh] overflow-y-auto">
+                            <!-- Final report will be generated here -->
+                        </div>
+                   </div>
+                   <div class="text-center mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                       <button id="open-save-share-modal-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition-transform transform hover:scale-105">
+                           결과 저장하기
+                       </button>
+                       <a href="https://blog.naver.com/pinkylucky7/223980321037" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-block bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg sm:text-xl py-3 px-8 rounded-lg transition">
+                           NASA 전문가 해설
+                       </a>
+                   </div>
             </div>
         </div>
     </div>
@@ -781,12 +781,12 @@
             });
 
             let evaluation = '', resultImage = '';
-            if (totalScore <= 25) { evaluation = 'NASA에서 연락옵니다. 당신은 외계인인가요?'; resultImage = 'result_excellent.jpg';}
-            else if (totalScore <= 32) { evaluation = '달 부동산 투자 추천! 당신은 이미 달 전문가입니다.'; resultImage = 'result_good.jpg';}
-            else if (totalScore <= 45) { evaluation = '아슬아슬... 지구에 갈 수 있겠죠?'; resultImage = 'result_fair.jpg';}
-            else if (totalScore <= 55) { evaluation = '지구에 있는 가족... 생각나시나요?'; resultImage = 'result_fair.jpg';}
-            else if (totalScore <= 70) { evaluation = '혹시 하고 싶은 말이 있나요?'; resultImage = 'result_danger.jpg';}
-            else { evaluation = '그동안 함께해서 행복했어요.'; resultImage = 'result_udead.jpg';}
+            if (totalScore <= 25) { evaluation = 'NASA에서 연락옵니다. 당신은 외계인인가요?'; resultImage = 'https://placehold.co/150x150/22c55e/ffffff?text=EXCELLENT';}
+            else if (totalScore <= 32) { evaluation = '달 부동산 투자 추천! 당신은 이미 달 전문가입니다.'; resultImage = 'https://placehold.co/150x150/3b82f6/ffffff?text=GOOD';}
+            else if (totalScore <= 45) { evaluation = '아슬아슬... 지구에 갈 수 있겠죠?'; resultImage = 'https://placehold.co/150x150/f97316/ffffff?text=FAIR';}
+            else if (totalScore <= 55) { evaluation = '지구에 있는 가족... 생각나시나요?'; resultImage = 'https://placehold.co/150x150/f97316/ffffff?text=FAIR';}
+            else if (totalScore <= 70) { evaluation = '혹시 하고 싶은 말이 있나요?'; resultImage = 'https://placehold.co/150x150/ef4444/ffffff?text=DANGER';}
+            else { evaluation = '그동안 함께해서 행복했어요.'; resultImage = 'https://placehold.co/150x150/7f1d1d/ffffff?text=U+DEAD';}
             
             dom.scoreSummary.innerHTML = `
                 <div id="result-image-container">
@@ -956,9 +956,9 @@
                     autoSave();
                 } else if (target.closest('#fullscreen-toggle')) {
                      if (!document.fullscreenElement) {
-                         document.documentElement.requestFullscreen().catch(e => console.error(e));
+                          document.documentElement.requestFullscreen().catch(e => console.error(e));
                      } else {
-                         document.exitFullscreen().catch(e => console.error(e));
+                          document.exitFullscreen().catch(e => console.error(e));
                      }
                 }
             });
