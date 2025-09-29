@@ -35,9 +35,10 @@
             width: 100%;
             min-height: 100vh; /* Use min-height to allow content to expand */
             display: flex;
-            align-items: center; /* Vertically center content when it's shorter than the screen */
+            align-items: flex-start; /* Start from top for better scrolling */
             justify-content: center;
             padding: 1rem; /* Add padding for smaller screens */
+            overflow-y: auto; /* Enable vertical scrolling */
         }
         @media (min-width: 640px) {
             #app-wrapper {
@@ -47,7 +48,17 @@
 
         /* Screen visibility */
         .screen { display: none; }
-        .active-screen { display: block; }
+        .active-screen {
+            display: block;
+            width: 100%;
+        }
+
+        /* All screens scrollable when content overflows */
+        #app-container {
+            width: 100%;
+            max-width: 112rem; /* max-w-7xl equivalent */
+            margin: 2rem auto;
+        }
 
         /* SortableJS styles */
         .drag-handle {
@@ -124,6 +135,17 @@
         }
         .rank-slot.empty:hover {
             background-color: #334155;
+        }
+
+        /* Ensure role cards grid is scrollable */
+        #role-screen .grid {
+            width: 100%;
+        }
+
+        /* Ensure knowledge content is scrollable */
+        #knowledge-list-container {
+            max-height: 70vh;
+            overflow-y: auto;
         }
 
         /* Role and result image styles */
