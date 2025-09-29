@@ -656,8 +656,75 @@
             container.appendChild(contentWrapper);
         };
         
+        // Role Understanding Modal Function
+        const openRoleUnderstandingModal = () => {
+            const modal = document.getElementById('role-understanding-modal');
+            const checkboxes = modal.querySelectorAll('.understanding-check');
+            const checkBtn = document.getElementById('check-understanding-btn');
+            const feedback = document.getElementById('understanding-feedback');
+            const correctCount = document.getElementById('correct-count');
+
+            // Reset checkboxes
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+                cb.parentElement.classList.remove('bg-red-900/30', 'bg-green-900/30');
+            });
+
+            // Reset button
+            checkBtn.textContent = '다시 확인해주세요';
+            checkBtn.className = 'bg-gray-500 text-white font-bold py-2 px-8 rounded-lg cursor-not-allowed';
+            checkBtn.disabled = true;
+
+            // Update counter
+            const updateCounter = () => {
+                const correctlyChecked = Array.from(checkboxes).filter(cb => {
+                    const isCorrect = cb.dataset.correct === 'true';
+                    return (isCorrect && cb.checked) || (!isCorrect && !cb.checked);
+                }).length;
+
+                correctCount.textContent = Math.max(0, correctlyChecked - 2); // Only count correct selections
+
+                if (correctlyChecked === 4) {
+                    checkBtn.textContent = '이해했습니다! ✅';
+                    checkBtn.className = 'bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-8 rounded-lg transition-all transform hover:scale-105';
+                    checkBtn.disabled = false;
+                    feedback.innerHTML = '<p class="text-green-400 font-bold">🎉 완벽하게 이해하셨습니다!</p>';
+                } else {
+                    checkBtn.textContent = '다시 확인해주세요';
+                    checkBtn.className = 'bg-gray-500 text-white font-bold py-2 px-8 rounded-lg cursor-not-allowed';
+                    checkBtn.disabled = true;
+                    feedback.innerHTML = `<p class="text-slate-400 text-sm">정답 선택: <span id="correct-count">${Math.max(0, correctlyChecked - 2)}</span>/2</p>`;
+                }
+            };
+
+            // Add listeners
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const isCorrect = cb.dataset.correct === 'true';
+                    if (cb.checked) {
+                        if (isCorrect) {
+                            cb.parentElement.classList.add('bg-green-900/30');
+                            cb.parentElement.classList.remove('bg-red-900/30');
+                        } else {
+                            cb.parentElement.classList.add('bg-red-900/30');
+                            cb.parentElement.classList.remove('bg-green-900/30');
+                        }
+                    } else {
+                        cb.parentElement.classList.remove('bg-red-900/30', 'bg-green-900/30');
+                    }
+                    updateCounter();
+                });
+            });
+
+            openModal(modal);
+        };
+
         const selectRole = (roleId) => {
             appData.state.selectedRole = roleId;
+            openRoleUnderstandingModal();
+        };
+
+        const proceedToKnowledgeScreen = () => {
             showScreen('knowledge-screen');
             populateKnowledgeContainer(dom.knowledgeListContainer);
         };
@@ -924,6 +991,19 @@
                 else if (target.id === 'skip-emergency-btn') skipEmergencySequence();
                 else if (target.id === 'proceed-to-guide-btn') showScreen('guide-screen');
                 else if (target.id === 'go-to-role-selection-btn') showScreen('role-screen');
+                else if (target.id === 'check-understanding-btn') {
+                    const modal = document.getElementById('role-understanding-modal');
+                    const checkboxes = modal.querySelectorAll('.understanding-check');
+                    const correctlyChecked = Array.from(checkboxes).filter(cb => {
+                        const isCorrect = cb.dataset.correct === 'true';
+                        return (isCorrect && cb.checked) || (!isCorrect && !cb.checked);
+                    }).length;
+
+                    if (correctlyChecked === 4) {
+                        closeModal(modal);
+                        proceedToKnowledgeScreen();
+                    }
+                }
                 else if (roleCard) selectRole(roleCard.dataset.role);
                 else if (target.id === 'go-to-ranking-btn') { showScreen('main-screen'); renderRankingSlots(); }
                 else if (target.id === 'finish-button') generateReport();
@@ -932,7 +1012,7 @@
                 else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까?', () => { window.open('', '_self').close(); }, '종료');
                 else if (target.id === 'team-activity-btn') {
                     showConfirm(
-                        '학교 수업 시간 버전입니다. 일반 사용자가 이용시 불편할 수 있습니다. 계속하시겠습니까?', 
+                        '학교 수업 시간 버전입니다. 일반 사용자가 이용시 불편할 수 있습니다. 계속하시겠습니까?',
                         () => { window.location.href = 'https://moon-survival-for-class.pages.dev'; },
                         '수업 버전 안내'
                     );
@@ -1023,5 +1103,46 @@
         initialize();
     })();
     </script>
+    <!-- Role Understanding Modal -->
+    <div id="role-understanding-modal" class="modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-slate-800 text-slate-100 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="border-b border-slate-600 pb-4 mb-4">
+                <h3 class="text-2xl font-bold text-cyan-400">🎯 역할 이해도 확인</h3>
+                <p class="text-slate-300 mt-2">아래 설명 중 <span class="text-emerald-400 font-bold">올바른 것</span>을 모두 선택하세요:</p>
+            </div>
+
+            <div class="space-y-3 mb-6">
+                <label class="block p-3 bg-slate-700 rounded-lg cursor-pointer hover:bg-slate-600 transition-colors">
+                    <input type="checkbox" class="understanding-check mr-3" data-correct="false">
+                    <span>내가 선택한 역할에 따라 특정 물품의 정답 순위가 바뀐다</span>
+                </label>
+
+                <label class="block p-3 bg-slate-700 rounded-lg cursor-pointer hover:bg-slate-600 transition-colors">
+                    <input type="checkbox" class="understanding-check mr-3" data-correct="true">
+                    <span>NASA 전문가들의 정답은 역할과 관계없이 항상 동일하다</span>
+                </label>
+
+                <label class="block p-3 bg-slate-700 rounded-lg cursor-pointer hover:bg-slate-600 transition-colors">
+                    <input type="checkbox" class="understanding-check mr-3" data-correct="false">
+                    <span>역할 지식을 보면 정답을 쉽게 알 수 있다</span>
+                </label>
+
+                <label class="block p-3 bg-slate-700 rounded-lg cursor-pointer hover:bg-slate-600 transition-colors">
+                    <input type="checkbox" class="understanding-check mr-3" data-correct="true">
+                    <span>역할은 단지 다양한 관점을 제공할 뿐이다</span>
+                </label>
+            </div>
+
+            <div class="border-t border-slate-600 pt-4">
+                <div id="understanding-feedback" class="mb-4">
+                    <p class="text-slate-400 text-sm">정답 선택: <span id="correct-count">0</span>/2</p>
+                </div>
+                <button id="check-understanding-btn" class="bg-gray-500 text-white font-bold py-2 px-8 rounded-lg cursor-not-allowed" disabled>
+                    다시 확인해주세요
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
