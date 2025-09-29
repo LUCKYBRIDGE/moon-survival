@@ -681,6 +681,7 @@
         // Role Understanding Modal Function
         const openRoleUnderstandingModal = () => {
             const modal = document.getElementById('role-understanding-modal');
+            modal.classList.remove('hidden'); // Show modal
             const checkboxes = modal.querySelectorAll('.understanding-check');
             const checkBtn = document.getElementById('check-understanding-btn');
             const feedback = document.getElementById('understanding-feedback');
@@ -738,7 +739,7 @@
                 });
             });
 
-            openModal(modal);
+            // Modal is already shown by removing 'hidden' class
         };
 
         const selectRole = (roleId) => {
@@ -1022,7 +1023,7 @@
                     }).length;
 
                     if (correctlyChecked === 4) {
-                        closeModal(modal);
+                        modal.classList.add('hidden'); // Hide modal
                         proceedToKnowledgeScreen();
                     }
                 }
