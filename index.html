@@ -739,6 +739,19 @@
                 });
             });
 
+            // Add button click listener
+            checkBtn.onclick = () => {
+                const correctlyChecked = Array.from(checkboxes).filter(cb => {
+                    const isCorrect = cb.dataset.correct === 'true';
+                    return (isCorrect && cb.checked) || (!isCorrect && !cb.checked);
+                }).length;
+
+                if (correctlyChecked === 4) {
+                    modal.classList.add('hidden');
+                    proceedToKnowledgeScreen();
+                }
+            };
+
             // Modal is already shown by removing 'hidden' class
         };
 
