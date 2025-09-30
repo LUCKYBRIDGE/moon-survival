@@ -1045,7 +1045,15 @@
                 else if (target.id === 'finish-button') generateReport();
                 else if (target.id === 'open-knowledge-modal-btn') openKnowledgeModal();
                 else if (target.id === 'back-to-start-btn') showConfirm('지금까지의 진행 상황이 모두 사라집니다. 정말 처음으로 돌아가시겠습니까?', restart, '처음으로 돌아가기');
-                else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까?', () => { window.open('', '_self').close(); }, '종료');
+                else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까?', () => {
+                    // Try to close the window
+                    window.open('', '_self', '');
+                    window.close();
+                    // If window.close() doesn't work, redirect to a blank page
+                    setTimeout(() => {
+                        window.location.href = 'about:blank';
+                    }, 100);
+                }, '종료');
                 else if (target.id === 'team-activity-btn') {
                     showConfirm(
                         '학교 수업 시간 버전입니다. 일반 사용자가 이용시 불편할 수 있습니다. 계속하시겠습니까?',
