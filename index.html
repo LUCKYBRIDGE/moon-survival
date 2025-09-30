@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!--
         Copyright (c) 2025 핑키네(Pinky-ne) All rights reserved.
 
@@ -204,7 +205,7 @@
                         수업 버전
                     </button>
                 </div>
-                <p class="text-xs text-slate-500 mt-8">made by.<a href="https://blog.naver.com/pinkylucky7" target="_blank" rel="noopener noreferrer" class="underline hover:text-cyan-400">핑키네</a></p>
+                <p class="text-xs text-slate-500 mt-8">Copyright © 2025 <a href="https://blog.naver.com/pinkylucky7" target="_blank" rel="noopener noreferrer" class="underline hover:text-cyan-400">핑키네</a></p>
             </div>
 
             <!-- Screen 1.7: Activity Guide -->
@@ -401,6 +402,7 @@
             <h3 class="text-2xl font-bold mb-6 text-cyan-400">결과 저장 및 공유</h3>
             <div class="flex flex-col gap-4">
                 <button id="save-image-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all">🖼️ 이미지로 저장</button>
+                <button id="export-excel-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition-all">📊 엑셀로 저장</button>
                 <button id="share-image-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-all">🔗 공유하기</button>
             </div>
         </div>
@@ -959,6 +961,165 @@
             }
         };
 
+        const exportToExcel = () => {
+            try {
+                const groupName = appData.state.groupName || '소속없음';
+                const studentNumber = appData.state.studentNumber || '00';
+                const studentName = appData.state.studentName || '이름없음';
+                const selectedRole = appData.state.selectedRole || '역할 미선택';
+
+                // 워크북 생성
+                const workbook = XLSX.utils.book_new();
+
+                // 메인 데이터 시트
+                const mainData = [];
+
+                mainData.push(['달에서 살아남기 - 개인 생존 보고서']);
+                mainData.push([]);
+                mainData.push(['■ 참가자 정보']);
+                mainData.push(['소속:', groupName, '', '', '', '']);
+                mainData.push(['학번:', studentNumber, '', '', '', '']);
+                mainData.push(['이름:', studentName, '', '', '', '']);
+                mainData.push(['선택 역할:', selectedRole, '', '', '', '']);
+                mainData.push([]);
+
+                // 점수 계산 - 순위가 입력된 물품과 입력되지 않은 물품 구분
+                let totalScore = 0;
+                const rankedItemIds = new Set(appData.state.rankedItems.map(item => item.id));
+                const unrankedItems = appData.items.filter(item => !rankedItemIds.has(item.id));
+
+                // 입력된 순위의 개수로 남은 순위의 중간값 계산
+                const rankedCount = appData.state.rankedItems.length;
+                const totalItems = appData.items.length;
+                const unrankedCount = totalItems - rankedCount;
+
+                // 남은 순위 범위의 중간값 (예: 6위~15위 → 10.5위)
+                const unrankedAverageRank = unrankedCount > 0 ? (rankedCount + 1 + totalItems) / 2 : 0;
+
+                // 순위가 입력된 물품들의 점수 계산
+                appData.state.rankedItems.forEach((rankedItem, index) => {
+                    if (rankedItem && rankedItem.id) {
+                        const itemInfo = appData.items.find(i => i.id === rankedItem.id);
+                        if (itemInfo) {
+                            const myRank = index + 1;
+                            const expertRank = itemInfo.nasaRank;
+                            const diff = Math.abs(myRank - expertRank);
+                            totalScore += diff;
+                        }
+                    }
+                });
+
+                // 순위가 입력되지 않은 물품들의 점수 계산
+                unrankedItems.forEach(itemInfo => {
+                    const expertRank = itemInfo.nasaRank;
+                    const diff = Math.abs(unrankedAverageRank - expertRank);
+                    totalScore += diff;
+                });
+
+                mainData.push(['■ 평가 결과']);
+                mainData.push(['총점:', totalScore.toFixed(1) + '점 (낮을수록 좋음)']);
+                if (unrankedCount > 0) {
+                    mainData.push(['※ 순위 미입력 물품 ' + unrankedCount + '개는 평균 ' + unrankedAverageRank.toFixed(1) + '위로 계산됨']);
+                }
+                mainData.push([]);
+
+                // 순위표 헤더
+                mainData.push(['■ 우선순위 비교표']);
+                mainData.push(['순위', '물품명', '나의 선택', 'NASA 순위', '차이 점수']);
+
+                // 순위가 입력된 물품들
+                appData.state.rankedItems.forEach((rankedItem, index) => {
+                    if (rankedItem && rankedItem.id) {
+                        const itemInfo = appData.items.find(i => i.id === rankedItem.id);
+                        if (itemInfo) {
+                            const myRank = index + 1;
+                            const expertRank = itemInfo.nasaRank;
+                            const diff = Math.abs(myRank - expertRank);
+
+                            mainData.push([
+                                myRank + '위',
+                                (itemInfo.icon || '') + ' ' + (itemInfo.name || ''),
+                                myRank + '위',
+                                expertRank + '위',
+                                diff.toFixed(1) + '점'
+                            ]);
+                        }
+                    }
+                });
+
+                // 순위가 입력되지 않은 물품들
+                if (unrankedCount > 0) {
+                    mainData.push([]);
+                    mainData.push(['■ 순위 미입력 물품 (평균 ' + unrankedAverageRank.toFixed(1) + '위로 계산)']);
+                    mainData.push(['', '물품명', '계산된 순위', 'NASA 순위', '차이 점수']);
+
+                    unrankedItems.forEach(itemInfo => {
+                        const expertRank = itemInfo.nasaRank;
+                        const diff = Math.abs(unrankedAverageRank - expertRank);
+
+                        mainData.push([
+                            '-',
+                            (itemInfo.icon || '') + ' ' + (itemInfo.name || ''),
+                            unrankedAverageRank.toFixed(1) + '위',
+                            expertRank + '위',
+                            diff.toFixed(1) + '점'
+                        ]);
+                    });
+                }
+
+                mainData.push([]);
+                mainData.push(['', '', '', '총점:', totalScore.toFixed(1) + '점']);
+
+                // 워크시트 생성 및 스타일 설정
+                const mainSheet = XLSX.utils.aoa_to_sheet(mainData);
+
+                // 열 너비 설정
+                mainSheet['!cols'] = [
+                    { wch: 10 },  // 순위
+                    { wch: 35 },  // 물품명
+                    { wch: 12 },  // 나의 선택
+                    { wch: 15 },  // NASA 순위
+                    { wch: 12 }   // 차이 점수
+                ];
+
+                // 메인 시트 추가
+                XLSX.utils.book_append_sheet(workbook, mainSheet, '평가결과');
+
+                // 전체 물품 정보 시트
+                const itemsData = [];
+                itemsData.push(['달에서 살아남기 - 전체 물품 정보']);
+                itemsData.push([]);
+                itemsData.push(['순위', '물품명', 'NASA 순위', '설명']);
+
+                appData.items
+                    .sort((a, b) => a.nasaRank - b.nasaRank)
+                    .forEach(item => {
+                        itemsData.push([
+                            item.nasaRank + '위',
+                            (item.icon || '') + ' ' + (item.name || ''),
+                            item.nasaRank + '위',
+                            item.description || ''
+                        ]);
+                    });
+
+                const itemsSheet = XLSX.utils.aoa_to_sheet(itemsData);
+                itemsSheet['!cols'] = [
+                    { wch: 10 },
+                    { wch: 35 },
+                    { wch: 15 },
+                    { wch: 60 }
+                ];
+                XLSX.utils.book_append_sheet(workbook, itemsSheet, '전체물품정보');
+
+                // 파일 저장
+                const fileName = `달생존_${groupName}_${studentNumber}번_${studentName}.xlsx`;
+                XLSX.writeFile(workbook, fileName);
+            } catch (error) {
+                console.error('Excel export error:', error);
+                showAlert('엑셀 파일 생성 중 오류가 발생했습니다.', '오류');
+            }
+        };
+
         const restart = () => { localStorage.removeItem(SAVE_KEY); window.location.reload(); };
 
         const saveState = () => {
@@ -1046,13 +1207,8 @@
                 else if (target.id === 'open-knowledge-modal-btn') openKnowledgeModal();
                 else if (target.id === 'back-to-start-btn') showConfirm('지금까지의 진행 상황이 모두 사라집니다. 정말 처음으로 돌아가시겠습니까?', restart, '처음으로 돌아가기');
                 else if (target.id === 'exit-app-btn') showConfirm('정말 종료하시겠습니까?', () => {
-                    // Try to close the window
-                    window.open('', '_self', '');
+                    window.open('about:blank', '_self');
                     window.close();
-                    // If window.close() doesn't work, redirect to a blank page
-                    setTimeout(() => {
-                        window.location.href = 'about:blank';
-                    }, 100);
                 }, '종료');
                 else if (target.id === 'team-activity-btn') {
                     showConfirm(
@@ -1063,6 +1219,7 @@
                 }
                 else if (target.id === 'open-save-share-modal-btn') openModal(dom.saveShareModalEl);
                 else if (target.id === 'save-image-btn') { closeModal(dom.saveShareModalEl); downloadReport(); }
+                else if (target.id === 'export-excel-btn') { closeModal(dom.saveShareModalEl); exportToExcel(); }
                 else if (target.id === 'share-image-btn') { closeModal(dom.saveShareModalEl); shareReport(); }
                 else if (target.closest('.close-modal-btn') || (target.classList.contains('modal-base') && !target.querySelector('.modal-content'))) closeModal(target.closest('.modal-base'));
                 else if(target.closest('.modal-ok-btn') || target.closest('.modal-cancel-btn')) closeModal(target.closest('.modal-base'));
